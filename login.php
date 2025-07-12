@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Login - Modern Design</title>
+  <title>Login</title>
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <!-- Font Awesome -->
@@ -58,7 +58,7 @@
     }
     
     .auth-illustration img {
-      max-width: 100%;
+      max-width: 90%;
       height: auto;
       margin-bottom: 30px;
     }
@@ -267,15 +267,13 @@
 <body>
   <div class="auth-container">
     <div class="auth-illustration">
-      <img src="https://illustrations.popsy.co/amber/secure-login.svg" alt="Login Illustration" style="width: 300px;">
+      <img src="/Web-Inventory/assets/images/logo.png" alt="Login Illustration" style="width: 300px;">
       <h2>New here?</h2>
       <p>Join us today! It takes only few steps</p>
-      <a href="register.php" class="btn btn-outline">SIGN UP</a>
     </div>
     
     <div class="auth-form">
-      <div class="logo">YourLogo</div>
-      <h3>Welcome Back!</h3>
+      <div class="logo">Welcome Back!</div>
       <p class="subtitle">Happy to see you again!</p>
       
       <form method="post" action="proses.php?action=login">
@@ -288,15 +286,6 @@
           <label for="password">Password</label>
           <input type="password" id="password" name="password" class="form-control" placeholder="Enter your password" required>
         </div>
-        
-        <div class="form-footer">
-          <div class="remember-me">
-            <input type="checkbox" id="remember">
-            <label for="remember">Keep me signed in</label>
-          </div>
-          <a href="#" class="text-primary">Forgot password?</a>
-        </div>
-        
         <button type="submit" class="btn btn-primary">SIGN IN</button>
       </form>
       

@@ -1,37 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <!-- Required meta tags -->
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <title>Spica Admin</title>
-  <!-- base:css -->
-  <link rel="stylesheet" href="../../../assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/vendors/mdi/css/materialdesignicons.min.css">
-  <link rel="stylesheet" href="../../assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/vendors/css/vendor.bundle.base.css">
-  <!-- endinject -->
-  <!-- plugin css for this page -->
-  <!-- End plugin css for this page -->
-  <!-- inject:css -->
-  <link rel="stylesheet" href="../../assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/css/style.css">
-  <!-- endinject -->
-  <link rel="shortcut icon" href="../../assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/images/favicon.png" />
-</head>
+  <link rel="stylesheet" href="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/vendors/mdi/css/materialdesignicons.min.css">
+  <link rel="stylesheet" href="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/vendors/css/vendor.bundle.base.css">
+  <link rel="stylesheet" href="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/css/style.css">
+  <link rel="shortcut icon" href="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/images/favicon.png" /></head>
 <body>
   <div class="container-scroller d-flex">
-    <!-- partial:./partials/_sidebar.html -->
     <?php include 'navbar.php';?>
-    <!-- partial -->
     <div class="container-fluid page-body-wrapper">
-      <!-- partial:./partials/_navbar.html -->
       <nav class="navbar col-lg-12 col-12 px-0 py-0 py-lg-4 d-flex flex-row">
         <div class="navbar-menu-wrapper d-flex align-items-center justify-content-end">
           <button class="navbar-toggler navbar-toggler align-self-center" type="button" data-toggle="minimize">
             <span class="mdi mdi-menu"></span>
           </button>
           <div class="navbar-brand-wrapper">
-            <a class="navbar-brand brand-logo" href="index.html"><img src="../../assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/images/logo.svg" alt="logo"/></a>
-            <a class="navbar-brand brand-logo-mini" href="index.html"><img src="../../assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/images/logo-mini.svg" alt="logo"/></a>
+            <a class="navbar-brand brand-logo" href="index.html"><img src="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/images/logo.svg" alt="logo"/></a>
+            <a class="navbar-brand brand-logo-mini" href="index.html"><img src="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/images/logo-mini.svg" alt="logo"/></a>
           </div>
           <h4 class="font-weight-bold mb-0 d-none d-md-block mt-1">Welcome back, Brandon Haynes</h4>
           <ul class="navbar-nav navbar-nav-right">
@@ -47,7 +35,7 @@
                 <p class="mb-0 font-weight-normal float-left dropdown-header">Messages</p>
                 <a class="dropdown-item preview-item">
                   <div class="preview-thumbnail">
-                      <img src="../../assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/images/faces/face4.jpg" alt="image" class="profile-pic">
+                      <img src="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/images/faces/face4.jpg" alt="image" class="profile-pic">
                   </div>
                   <div class="preview-item-content flex-grow">
                     <h6 class="preview-subject ellipsis font-weight-normal">David Grey
@@ -59,7 +47,7 @@
                 </a>
                 <a class="dropdown-item preview-item">
                   <div class="preview-thumbnail">
-                      <img src="../../assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/images/faces/face2.jpg" alt="image" class="profile-pic">
+                      <img src="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/images/faces/face2.jpg" alt="image" class="profile-pic">
                   </div>
                   <div class="preview-item-content flex-grow">
                     <h6 class="preview-subject ellipsis font-weight-normal">Tim Cook
@@ -71,7 +59,7 @@
                 </a>
                 <a class="dropdown-item preview-item">
                   <div class="preview-thumbnail">
-                      <img src="../../assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/images/faces/face3.jpg" alt="image" class="profile-pic">
+                      <img src="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/images/faces/face3.jpg" alt="image" class="profile-pic">
                   </div>
                   <div class="preview-item-content flex-grow">
                     <h6 class="preview-subject ellipsis font-weight-normal"> Johnson
@@ -147,7 +135,7 @@
           <ul class="navbar-nav navbar-nav-right">
             <li class="nav-item nav-profile dropdown">
               <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" id="profileDropdown">
-                <img src="../../assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/images/faces/face5.jpg" alt="profile"/>
+                <img src="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/images/faces/face5.jpg" alt="profile"/>
                 <span class="nav-profile-name">Eleanor Richardson</span>
               </a>
               <div class="dropdown-menu dropdown-menu-right navbar-dropdown" aria-labelledby="profileDropdown">
@@ -179,7 +167,6 @@
           </ul>
         </div>
       </nav>
-      <!-- partial -->
       <div class="main-panel">
         <div class="content-wrapper">
           <div class="row">
@@ -370,7 +357,7 @@
                       <tbody>
                         <tr>
                           <td class="py-1">
-                            <img src="../../assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/images/faces/face1.jpg" alt="image"/>
+                            <img src="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/images/faces/face1.jpg" alt="image"/>
                           </td>
                           <td>
                             Herman Beck
@@ -389,7 +376,7 @@
                         </tr>
                         <tr>
                           <td class="py-1">
-                            <img src="../../assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/images/faces/face2.jpg" alt="image"/>
+                            <img src="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/images/faces/face2.jpg" alt="image"/>
                           </td>
                           <td>
                             Messsy Adam
@@ -408,7 +395,7 @@
                         </tr>
                         <tr>
                           <td class="py-1">
-                            <img src="../../assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/images/faces/face3.jpg" alt="image"/>
+                            <img src="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/images/faces/face3.jpg" alt="image"/>
                           </td>
                           <td>
                             John Richards
@@ -427,7 +414,7 @@
                         </tr>
                         <tr>
                           <td class="py-1">
-                            <img src="../../assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/images/faces/face4.jpg" alt="image"/>
+                            <img src="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/images/faces/face4.jpg" alt="image"/>
                           </td>
                           <td>
                             Peter Meggik
@@ -446,7 +433,7 @@
                         </tr>
                         <tr>
                           <td class="py-1">
-                            <img src="../../assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/images/faces/face5.jpg" alt="image"/>
+                            <img src="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/images/faces/face5.jpg" alt="image"/>
                           </td>
                           <td>
                             Edward
@@ -465,7 +452,7 @@
                         </tr>
                         <tr>
                           <td class="py-1">
-                            <img src="../../assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/images/faces/face6.jpg" alt="image"/>
+                            <img src="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/images/faces/face6.jpg" alt="image"/>
                           </td>
                           <td>
                             John Doe
@@ -484,7 +471,7 @@
                         </tr>
                         <tr>
                           <td class="py-1">
-                            <img src="../../assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/images/faces/face7.jpg" alt="image"/>
+                            <img src="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/images/faces/face7.jpg" alt="image"/>
                           </td>
                           <td>
                             Henry Tom
@@ -508,7 +495,6 @@
               </div>
             </div>
           </div>
-          <!-- row end -->
           <div class="row">
             <div class="col-md-4 grid-margin stretch-card">
               <div class="card bg-facebook d-flex align-items-center">
@@ -553,10 +539,7 @@
               </div>
             </div>
           </div>
-          <!-- row end -->
         </div>
-        <!-- content-wrapper ends -->
-        <!-- partial:./partials/_footer.html -->
         <footer class="footer">
           <div class="card">
             <div class="card-body">
@@ -567,32 +550,17 @@
             </div>
           </div>
         </footer>
-        <!-- partial -->
       </div>
-      <!-- main-panel ends -->
     </div>
-    <!-- page-body-wrapper ends -->
   </div>
-  <!-- container-scroller -->
 
-  <!-- base:js -->
-  <script src="../../assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/vendors/js/vendor.bundle.base.js"></script>
-  <!-- endinject -->
-  <!-- Plugin js for this page-->
-  <script src="../../assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/vendors/chart.js/Chart.min.js"></script>
-  <script src="../../assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/js/jquery.cookie.js" type="text/javascript"></script>
-  <!-- End plugin js for this page-->
-  <!-- inject:js -->
-  <script src="../../assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/js/off-canvas.js"></script>
-  <script src="../../assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/js/hoverable-collapse.js"></script>
-  <script src="../../assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/js/template.js"></script>
-  <!-- endinject -->
-  <!-- plugin js for this page -->
-    <script src="../../assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/js/jquery.cookie.js" type="text/javascript"></script>
-  <!-- End plugin js for this page -->
-  <!-- Custom js for this page-->
-  <script src="../../assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/js/dashboard.js"></script>
-  <!-- End custom js for this page-->
+<script src="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/vendors/js/vendor.bundle.base.js"></script>
+  <script src="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/vendors/chart.js/Chart.min.js"></script>
+  <script src="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/js/jquery.cookie.js" type="text/javascript"></script>
+  <script src="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/js/off-canvas.js"></script>
+  <script src="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/js/hoverable-collapse.js"></script>
+  <script src="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/js/template.js"></script>
+  <script src="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/js/dashboard.js"></script>
 </body>
 
 </html>

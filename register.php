@@ -58,7 +58,7 @@
     }
     
     .auth-illustration img {
-      max-width: 100%;
+      max-width: 90%;
       height: auto;
       margin-bottom: 30px;
     }
@@ -261,10 +261,9 @@
 <body>
   <div class="auth-container">
     <div class="auth-illustration">
-      <img src="https://illustrations.popsy.co/amber/secure-login.svg" alt="Register Illustration" style="width: 300px;">
+      <img src="/Web-Inventory/assets/images/logo.png" alt="Register Illustration" style="width: 300px;">
       <h2>One of us?</h2>
       <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Nostrum laboriosam od deleniti.</p>
-      <a href="login.php" class="btn btn-outline">SIGN IN</a>
     </div>
     
     <div class="auth-form">
