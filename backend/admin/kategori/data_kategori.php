@@ -1,84 +1,141 @@
 <?php
 session_start();
-include '../../../koneksi.php';
+if (!isset($_SESSION['username']) || $_SESSION['tipe_user'] != 'Administrator') {
+    header("Location: /login.php");
+    exit();
+}
+include_once __DIR__ . '/../../../koneksi.php';
 
 if (!$conn) {
-    die("Database connection failed: " . mysqli_connect_error());
+    die("Database connection failed: " . pg_last_error());
 }
 
-$sql = "SELECT * FROM kategori_barang";
-$result = mysqli_query($conn, $sql);
-
-if (!$result) {
-    die("Query failed: " . mysqli_error($conn));
-}
+$sql = "SELECT k.*, COUNT(b.kd_barang) as total_produk 
+        FROM kategori_barang k 
+        LEFT JOIN tb_barang b ON k.id_kategori = b.kode_jenis 
+        GROUP BY k.id_kategori, k.nama_kategori 
+        ORDER BY k.id_kategori ASC";
+$result = pg_query($conn, $sql);
 ?>
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Data Kategori - SIMTI</title>
-    <link rel="stylesheet" href="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/vendors/mdi/css/materialdesignicons.min.css">
-    <link rel="stylesheet" href="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/vendors/css/vendor.bundle.base.css">
-    <link rel="stylesheet" href="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/css/style.css">
+    <title>Kategori Barang - SIMTI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/assets/css/clean-ui.css">
 </head>
 <body>
-    <div class="container-scroller d-flex">
-        <?php include '../navbar.php'; ?>
-        <div class="container-fluid page-body-wrapper">
-            <div class="main-panel">
-                <div class="content-wrapper">
-                    <div class="row">
-                        <div class="col-12 grid-margin stretch-card">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h4 class="card-title">Data Kategori</h4>
-                                    <p class="card-description">Last updated: <?php echo date('H:i A, F d, Y', strtotime('09:47 PM WIB')); ?></p>
-                                    <a href="tambah_data_kategori.php" class="btn btn-primary mb-3">Tambah Kategori</a>
-                                    <div class="table-responsive">
-                                        <table class="table table-striped">
-                                            <thead>
-                                                <tr>
-                                                    <th>ID Kategori</th>
-                                                    <th>Nama Kategori</th>
-                                                    <th>Aksi</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <?php
-                                                if (mysqli_num_rows($result) > 0) {
-                                                    while ($row = mysqli_fetch_assoc($result)) {
-                                                        ?>
-                                                        <tr>
-                                                            <td><?php echo htmlspecialchars($row['id_kategori']); ?></td>
-                                                            <td><?php echo htmlspecialchars($row['nama_kategori']); ?></td>
-                                                            <td>
-                                                                <a href="edit_kategori.php?id_kategori=<?php echo htmlspecialchars($row['id_kategori']); ?>" class="btn btn-warning btn-sm">Edit</a>
-                                                                <a href="hapus_kategori.php?id_kategori=<?php echo htmlspecialchars($row['id_kategori']); ?>" class="btn btn-danger btn-sm" onclick="return confirm('Yakin ingin menghapus?');">Hapus</a>
-                                                            </td>
-                                                        </tr>
-                                                        <?php
-                                                    }
-                                                } else {
-                                                    echo "<tr><td colspan='3' class='text-center'>Tidak ada data kategori.</td></tr>";
-                                                }
-                                                ?>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <?php include '../../../include/footer.php'; ?>
+
+    <!-- Top Capsule Navigation -->
+    <?php include_once __DIR__ . '/../../../include/bento_header.php'; ?>
+
+    <main class="bento-container">
+        <!-- Header Row -->
+        <div class="bento-header-row">
+            <div style="display: flex; align-items: center; gap: 14px;">
+                <a href="/backend/admin/index_admin.php" class="bento-back-btn" title="Kembali ke Dashboard">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </a>
+                <h1 class="bento-title">Kategori Barang</h1>
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <a href="/backend/admin/barang/data_barang.php" class="bento-btn bento-btn-dark">
+                    <i class="fa-solid fa-boxes-stacked"></i> Master Barang
+                </a>
+                <a href="tambah_data_kategori.php" class="bento-btn bento-btn-lime">
+                    <i class="fa-solid fa-plus"></i> Tambah Kategori
+                </a>
             </div>
         </div>
-    </div>
-    <script src="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/vendors/js/vendor.bundle.base.js"></script>
-    <script src="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/js/off-canvas.js"></script>
+
+        <!-- Bento Table Card -->
+        <div class="bento-table-card">
+            <div class="bento-table-header">
+                <div>
+                    <h3 style="color: var(--text-white); margin: 0; font-size: 1.15rem; font-weight: 700;">Klasifikasi & Kelompok Produk</h3>
+                    <p style="color: var(--text-sage); margin: 4px 0 0 0; font-size: 0.8rem;">Struktur pengelompokan item inventaris di database</p>
+                </div>
+
+                <div class="bento-filter-pill">
+                    <span class="bento-pulse-dot"></span>
+                    <span><?= ($result ? pg_num_rows($result) : 0) ?> Klasifikasi</span>
+                </div>
+            </div>
+
+            <div class="bento-table-wrap">
+                <table class="bento-table">
+                    <thead>
+                        <tr>
+                            <th>ID Kategori</th>
+                            <th>Nama Kategori</th>
+                            <th>Total Barang Terkait</th>
+                            <th style="text-align: right;">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
+                        $hasData = false;
+                        if ($result && pg_num_rows($result) > 0) {
+                            while ($row = pg_fetch_assoc($result)) {
+                                $hasData = true;
+                                ?>
+                                <tr>
+                                    <td>
+                                        <span style="font-family: var(--font-mono); font-weight: 700; color: var(--c-mint);">
+                                            #<?= htmlspecialchars($row['id_kategori']) ?>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div style="font-weight: 700; color: #ffffff;">
+                                            <?= htmlspecialchars($row['nama_kategori']) ?>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="bento-status-pill bento-status-safe" style="font-family: var(--font-mono);">
+                                            <?= (int)$row['total_produk'] ?> SKU Produk
+                                        </span>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <div style="display: inline-flex; gap: 8px;">
+                                            <a href="edit_kategori.php?id_kategori=<?= urlencode($row['id_kategori']) ?>" class="bento-btn bento-btn-sm bento-btn-warning" title="Edit">
+                                                <i class="fa-solid fa-pen-to-square"></i>
+                                            </a>
+                                            <a href="hapus_kategori.php?id_kategori=<?= urlencode($row['id_kategori']) ?>" class="bento-btn bento-btn-sm bento-btn-danger" onclick="return confirm('Hapus kategori ini?');" title="Hapus">
+                                                <i class="fa-solid fa-trash-can"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <?php
+                            }
+                        }
+                        if (!$hasData) {
+                            ?>
+                            <tr>
+                                <td colspan="4" style="text-align: center; padding: 48px 20px; color: var(--text-muted);">
+                                    <i class="fa-solid fa-tags" style="font-size: 2.2rem; display: block; margin-bottom: 12px; color: var(--c-forest-600);"></i>
+                                    Belum ada kategori yang dibuat.
+                                </td>
+                            </tr>
+                            <?php
+                        }
+                        ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <footer style="text-align: center; padding: 24px; border-top: 1px solid var(--border-glass); font-size: 0.825rem; color: var(--text-muted);">
+        &copy; <?= date('Y') ?> <strong>SIMTI Inventory</strong> &bull; Supabase PostgreSQL
+    </footer>
+
 </body>
 </html>
-<?php mysqli_close($conn); ?>
+<?php pg_close($conn); ?>

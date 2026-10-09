@@ -1,306 +1,329 @@
-<?php include "koneksi.php"; ?>
+<?php 
+include "koneksi.php"; 
+session_start();
+if (isset($_SESSION['username']) && isset($_SESSION['tipe_user'])) {
+    if ($_SESSION['tipe_user'] == 'Administrator') {
+        header("Location: backend/admin/index_admin.php");
+        exit();
+    } elseif ($_SESSION['tipe_user'] == 'Supplier') {
+        header("Location: backend/suplier/index_suplier.php");
+        exit();
+    }
+}
+?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Login</title>
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <!-- Font Awesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <title>Masuk - SIMTI Inventory</title>
+  
+  <!-- Google Fonts & Font Awesome -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/clean-ui.css">
+
   <style>
-    :root {
-      --primary: #6366f1;
-      --primary-dark: #4f46e5;
-      --secondary: #f43f5e;
-      --dark: #1e293b;
-      --light: #f8fafc;
-      --gray: #94a3b8;
-    }
-    
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Poppins', sans-serif;
-    }
-    
     body {
-      background-color: #f1f5f9;
       min-height: 100vh;
+      background: radial-gradient(circle at 10% 20%, #0b2b26 0%, #051f20 90%) !important;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 20px;
+      padding: 24px;
+      color: var(--text-sage);
     }
-    
-    .auth-container {
-      display: flex;
+
+    .auth-card-bento {
       width: 100%;
-      max-width: 1100px;
-      background: white;
-      border-radius: 20px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+      max-width: 980px;
+      background: var(--c-forest-800);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-bento);
+      box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.7);
+      display: flex;
       overflow: hidden;
+      min-height: 580px;
     }
-    
-    .auth-illustration {
+
+    /* Left Side: Editorial Showcase (Image 2 Colors) */
+    .auth-brand-side {
       flex: 1;
-      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      padding: 60px;
+      background: linear-gradient(160deg, #0b2b26 0%, #051f20 100%);
+      padding: 48px;
       display: flex;
       flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      color: white;
-      text-align: center;
-    }
-    
-    .auth-illustration img {
-      max-width: 90%;
-      height: auto;
-      margin-bottom: 30px;
-    }
-    
-    .auth-illustration h2 {
-      font-size: 2rem;
-      margin-bottom: 15px;
-      font-weight: 600;
-    }
-    
-    .auth-illustration p {
-      opacity: 0.9;
-      margin-bottom: 30px;
-      font-size: 0.95rem;
-    }
-    
-    .auth-form {
-      flex: 1;
-      padding: 60px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
-    
-    .logo {
-      font-size: 1.8rem;
-      font-weight: 700;
-      color: var(--primary);
-      margin-bottom: 10px;
-    }
-    
-    .auth-form h3 {
-      font-size: 1.5rem;
-      color: var(--dark);
-      margin-bottom: 5px;
-    }
-    
-    .auth-form p.subtitle {
-      color: var(--gray);
-      margin-bottom: 30px;
-      font-size: 0.9rem;
-    }
-    
-    .form-group {
-      margin-bottom: 20px;
+      justify-content: space-between;
+      border-right: 1px solid var(--border-glass);
       position: relative;
     }
-    
-    .form-group label {
-      display: block;
+
+    .auth-brand-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      background: rgba(218, 241, 222, 0.08);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-pill);
+      font-size: 0.775rem;
+      font-weight: 700;
+      color: var(--c-mint);
+      margin-bottom: 24px;
+    }
+
+    .auth-logo-title {
+      font-size: 2rem;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: -0.03em;
       margin-bottom: 8px;
-      font-size: 0.9rem;
-      color: var(--dark);
-      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
-    
-    .form-control {
-      width: 100%;
-      padding: 12px 15px;
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
+
+    .auth-logo-sub {
+      color: var(--text-sage);
       font-size: 0.95rem;
-      transition: all 0.3s;
+      line-height: 1.6;
+      margin-bottom: 32px;
     }
-    
-    .form-control:focus {
+
+    .auth-feature-box {
+      background: rgba(22, 56, 50, 0.6);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-bento-sm);
+      padding: 16px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .auth-feature-box i {
+      font-size: 1.25rem;
+      color: var(--c-lime);
+    }
+
+    .auth-feature-text {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--c-mint);
+    }
+
+    /* Right Side: High-Contrast Clean Form */
+    .auth-form-side {
+      flex: 1.1;
+      background: #ffffff;
+      padding: 48px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      color: var(--c-forest-900);
+    }
+
+    .auth-form-title {
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: var(--c-forest-900);
+      letter-spacing: -0.03em;
+      margin-bottom: 6px;
+    }
+
+    .auth-form-sub {
+      color: #64748b;
+      font-size: 0.9rem;
+      margin-bottom: 28px;
+    }
+
+    .form-group-bento {
+      margin-bottom: 18px;
+    }
+
+    .form-label-bento {
+      display: block;
+      font-size: 0.825rem;
+      font-weight: 700;
+      color: var(--c-forest-900);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .form-input-bento {
+      width: 100%;
+      padding: 13px 18px;
+      border: 1.5px solid #cbd5e1;
+      border-radius: var(--radius-bento-xs);
+      font-size: 0.95rem;
+      color: var(--c-forest-900);
+      background: #f8fafc;
+      font-family: var(--font-main);
+      transition: all 0.2s ease;
+    }
+
+    .form-input-bento:focus {
       outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+      background: #ffffff;
+      border-color: #0b2b26;
+      box-shadow: 0 0 0 4px rgba(11, 43, 38, 0.12);
     }
-    
-    .btn {
-      padding: 12px 20px;
-      border-radius: 8px;
-      font-size: 1rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.3s;
+
+    .auth-submit-btn {
+      width: 100%;
+      padding: 14px;
+      background: var(--c-forest-900);
+      color: var(--c-lime);
       border: none;
+      border-radius: var(--radius-pill);
+      font-size: 0.95rem;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: all 0.2s ease;
+      margin-top: 10px;
+      box-shadow: 0 8px 20px -4px rgba(5, 31, 32, 0.4);
     }
-    
-    .btn-primary {
-      background-color: var(--primary);
-      color: white;
-    }
-    
-    .btn-primary:hover {
-      background-color: var(--primary-dark);
+
+    .auth-submit-btn:hover {
+      background: #0b2b26;
+      color: #ffffff;
       transform: translateY(-2px);
+      box-shadow: 0 12px 24px -4px rgba(5, 31, 32, 0.6);
     }
-    
-    .btn-outline {
-      background: transparent;
-      border: 1px solid var(--primary);
-      color: var(--primary);
+
+    .demo-pill-btn {
+      padding: 6px 14px;
+      border-radius: var(--radius-pill);
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      font-size: 0.775rem;
+      font-weight: 700;
+      color: var(--c-forest-900);
+      cursor: pointer;
+      transition: all 0.15s ease;
     }
-    
-    .btn-outline:hover {
-      background-color: var(--primary);
-      color: white;
+
+    .demo-pill-btn:hover {
+      background: var(--c-mint);
+      border-color: var(--c-sage);
     }
-    
-    .divider {
-      display: flex;
-      align-items: center;
-      margin: 25px 0;
-    }
-    
-    .divider::before, .divider::after {
-      content: "";
-      flex: 1;
-      border-bottom: 1px solid #e2e8f0;
-    }
-    
-    .divider-text {
-      padding: 0 15px;
-      color: var(--gray);
-      font-size: 0.8rem;
-    }
-    
-    .social-login {
-      display: flex;
-      justify-content: center;
-      gap: 15px;
-      margin-bottom: 25px;
-    }
-    
-    .social-btn {
-      width: 45px;
-      height: 45px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-size: 1.1rem;
-      transition: all 0.3s;
-    }
-    
-    .social-btn:hover {
-      transform: translateY(-3px);
-    }
-    
-    .facebook {
-      background-color: #3b5998;
-    }
-    
-    .google {
-      background-color: #db4437;
-    }
-    
-    .twitter {
-      background-color: #1da1f2;
-    }
-    
-    .text-center {
-      text-align: center;
-    }
-    
-    .mt-4 {
-      margin-top: 1.5rem;
-    }
-    
-    .text-primary {
-      color: var(--primary);
-      text-decoration: none;
-      font-weight: 500;
-    }
-    
-    .text-primary:hover {
-      text-decoration: underline;
-    }
-    
-    .form-footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-    
-    .remember-me {
-      display: flex;
-      align-items: center;
-    }
-    
-    .remember-me input {
-      margin-right: 8px;
-    }
-    
-    @media (max-width: 768px) {
-      .auth-container {
+
+    @media (max-width: 860px) {
+      .auth-card-bento {
         flex-direction: column;
+        max-width: 460px;
       }
-      
-      .auth-illustration {
-        padding: 40px 20px;
-        display: none;
-      }
-      
-      .auth-form {
-        padding: 40px;
+      .auth-brand-side, .auth-form-side {
+        padding: 32px 24px;
       }
     }
   </style>
 </head>
 <body>
-  <div class="auth-container">
-    <div class="auth-illustration">
-      <img src="/Web-Inventory/assets/images/logo.png" alt="Login Illustration" style="width: 300px;">
-      <h2>New here?</h2>
-      <p>Join us today! It takes only few steps</p>
+
+  <div class="auth-card-bento">
+    <!-- Left Showcase -->
+    <div class="auth-brand-side">
+      <div>
+        <div class="auth-brand-badge">
+          <span class="bento-pulse-dot"></span>
+          <span>PostgreSQL Supabase Connected</span>
+        </div>
+
+        <div class="auth-logo-title">
+          <div class="bento-brand-icon">
+            <i class="fa-solid fa-boxes-stacked"></i>
+          </div>
+          <span>SIMTI</span>
+        </div>
+
+        <p class="auth-logo-sub">
+          Sistem Pengelolaan Stok & Inventaris Gudang dengan Arsitektur Cloud Terintegrasi.
+        </p>
+
+        <div class="auth-feature-box">
+          <i class="fa-solid fa-bolt"></i>
+          <span class="auth-feature-text">Sinkronisasi Realtime Multi-Perangkat</span>
+        </div>
+
+        <div class="auth-feature-box">
+          <i class="fa-solid fa-shield-halved"></i>
+          <span class="auth-feature-text">Autentikasi Multi-Level (Admin, Supplier, Customer)</span>
+        </div>
+
+        <div class="auth-feature-box">
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+          <span class="auth-feature-text">Vercel & Supabase Cloud Ready</span>
+        </div>
+      </div>
+
+      <div style="font-size: 0.8rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; margin-top: 24px;">
+        <span>&copy; <?= date('Y') ?> SIMTI</span>
+        <a href="index.php" style="color: var(--c-sage); text-decoration: none; font-weight: 600;">
+          <i class="fa-solid fa-arrow-left"></i> Beranda
+        </a>
+      </div>
     </div>
-    
-    <div class="auth-form">
-      <div class="logo">Welcome Back!</div>
-      <p class="subtitle">Happy to see you again!</p>
-      
+
+    <!-- Right Form -->
+    <div class="auth-form-side">
+      <div class="auth-form-title">Selamat Datang</div>
+      <p class="auth-form-sub">Masukkan kredensial akun untuk mengakses portal.</p>
+
       <form method="post" action="proses.php?action=login">
-        <div class="form-group">
-          <label for="username">Username</label>
-          <input type="text" id="username" name="username" class="form-control" placeholder="Enter your username" required>
+        <div class="form-group-bento">
+          <label class="form-label-bento" for="username">Username / Email</label>
+          <input type="text" id="username" name="username" class="form-input-bento" placeholder="admin atau email@mail.com" required autocomplete="username">
         </div>
-        
-        <div class="form-group">
-          <label for="password">Password</label>
-          <input type="password" id="password" name="password" class="form-control" placeholder="Enter your password" required>
+
+        <div class="form-group-bento">
+          <label class="form-label-bento" for="password">Password</label>
+          <input type="password" id="password" name="password" class="form-input-bento" placeholder="••••••••" required autocomplete="current-password">
         </div>
-        <button type="submit" class="btn btn-primary">SIGN IN</button>
+
+        <button type="submit" class="auth-submit-btn">
+          <span>Masuk ke Dashboard</span>
+          <i class="fa-solid fa-arrow-right"></i>
+        </button>
       </form>
-      
-      <div class="divider">
-        <span class="divider-text">OR CONTINUE WITH</span>
+
+      <!-- Quick Demo Account Fill -->
+      <div style="margin-top: 28px; padding-top: 20px; border-top: 1px dashed #e2e8f0;">
+        <div style="font-size: 0.725rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px;">
+          Pilih Cepat Akun Demo:
+        </div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <button type="button" class="demo-pill-btn" onclick="fillDemo('admin', 'admin123')">
+            <i class="fa-solid fa-user-shield"></i> Admin
+          </button>
+          <button type="button" class="demo-pill-btn" onclick="fillDemo('supplier@mail.com', 'sup123')">
+            <i class="fa-solid fa-truck"></i> Supplier
+          </button>
+          <button type="button" class="demo-pill-btn" onclick="fillDemo('customer@mail.com', 'cust123')">
+            <i class="fa-solid fa-user"></i> Customer
+          </button>
+        </div>
       </div>
-      
-      <div class="social-login">
-        <a href="#" class="social-btn facebook"><i class="fab fa-facebook-f"></i></a>
-        <a href="#" class="social-btn google"><i class="fab fa-google"></i></a>
-        <a href="#" class="social-btn twitter"><i class="fab fa-twitter"></i></a>
+
+      <div style="margin-top: 24px; text-align: center; font-size: 0.85rem; color: #64748b;">
+        Belum memiliki akun? <a href="register.php" style="color: var(--c-forest-900); font-weight: 700; text-decoration: underline;">Daftar di sini</a>
       </div>
-      
-      <p class="text-center mt-4">Don't have an account? <a href="register.php" class="text-primary">Sign Up</a></p>
     </div>
   </div>
+
+  <script>
+    function fillDemo(u, p) {
+      document.getElementById('username').value = u;
+      document.getElementById('password').value = p;
+      document.getElementById('username').focus();
+    }
+  </script>
 </body>
 </html>

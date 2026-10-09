@@ -1,16 +1,16 @@
-<?php
+﻿<?php
 session_start();
-include '../../../koneksi.php';
+include_once __DIR__ . '/../../../koneksi.php';
 
 if (!$conn) {
-    die("Database connection failed: " . mysqli_connect_error());
+    die("Database connection failed: " . pg_last_error());
 }
 
 $sql = "SELECT * FROM tb_pembelian";
-$result = mysqli_query($conn, $sql);
+$result = pg_query($conn, $sql);
 
 if (!$result) {
-    die("Query failed: " . mysqli_error($conn));
+    die("Query failed: " . pg_last_error($conn));
 }
 ?>
 
@@ -20,13 +20,15 @@ if (!$result) {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Transaksi Pembelian - SIMTI</title>
-    <link rel="stylesheet" href="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/vendors/mdi/css/materialdesignicons.min.css">
-    <link rel="stylesheet" href="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/vendors/css/vendor.bundle.base.css">
-    <link rel="stylesheet" href="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/css/style.css">
+    <link rel="stylesheet" href="/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/vendors/mdi/css/materialdesignicons.min.css">
+    <link rel="stylesheet" href="/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/vendors/css/vendor.bundle.base.css">
+    <link rel="stylesheet" href="/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/clean-ui.css">
 </head>
 <body>
     <div class="container-scroller d-flex">
-        <?php include '../navbar.php'; ?>
+        <?php include_once __DIR__ . '/../navbar.php'; ?>
         <div class="container-fluid page-body-wrapper">
             <div class="main-panel">
                 <div class="content-wrapper">
@@ -51,8 +53,8 @@ if (!$result) {
                                             </thead>
                                             <tbody>
                                                 <?php
-                                                if (mysqli_num_rows($result) > 0) {
-                                                    while ($row = mysqli_fetch_assoc($result)) {
+                                                if (pg_num_rows($result) > 0) {
+                                                    while ($row = pg_fetch_assoc($result)) {
                                                         ?>
                                                         <tr>
                                                             <td><?php echo htmlspecialchars($row['no_pembelian']); ?></td>
@@ -82,8 +84,8 @@ if (!$result) {
             </div>
         </div>
     </div>
-    <script src="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/vendors/js/vendor.bundle.base.js"></script>
-    <script src="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/js/off-canvas.js"></script>
+    <script src="/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/vendors/js/vendor.bundle.base.js"></script>
+    <script src="/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/js/off-canvas.js"></script>
 </body>
 </html>
-<?php mysqli_close($conn); ?>
+<?php pg_close($conn); ?>

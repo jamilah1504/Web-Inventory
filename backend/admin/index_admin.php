@@ -1,566 +1,321 @@
+<?php
+session_start();
+if (!isset($_SESSION['username']) || $_SESSION['tipe_user'] != 'Administrator') {
+    header("Location: /login.php");
+    exit();
+}
+
+require_once __DIR__ . '/../../koneksi.php';
+
+// Ambil Statistik Live dari Database Supabase
+$total_barang = 0;
+$total_stok = 0;
+$total_supplier = 0;
+$total_customer = 0;
+$total_pembelian = 0;
+$total_penjualan = 0;
+
+$res_b = pg_query($conn, "SELECT COUNT(*) as c, COALESCE(SUM(stok), 0) as s FROM tb_barang");
+if ($res_b && $row = pg_fetch_assoc($res_b)) {
+    $total_barang = (int)$row['c'];
+    $total_stok = (int)$row['s'];
+}
+
+$res_s = pg_query($conn, "SELECT COUNT(*) as c FROM tb_supplier");
+if ($res_s && $row = pg_fetch_assoc($res_s)) {
+    $total_supplier = (int)$row['c'];
+}
+
+$res_c = pg_query($conn, "SELECT COUNT(*) as c FROM tb_customer");
+if ($res_c && $row = pg_fetch_assoc($res_c)) {
+    $total_customer = (int)$row['c'];
+}
+
+$res_p = pg_query($conn, "SELECT COUNT(*) as c FROM tb_pembelian");
+if ($res_p && $row = pg_fetch_assoc($res_p)) {
+    $total_pembelian = (int)$row['c'];
+}
+
+$res_j = pg_query($conn, "SELECT COUNT(*) as c FROM tb_penjualan");
+if ($res_j && $row = pg_fetch_assoc($res_j)) {
+    $total_penjualan = (int)$row['c'];
+}
+
+// Data Barang Terbaru
+$barang_list = pg_query($conn, "SELECT * FROM tb_barang ORDER BY stok ASC LIMIT 5");
+
+// Hitung barang dengan stok menipis (<= 10)
+$res_low = pg_query($conn, "SELECT COUNT(*) as c FROM tb_barang WHERE stok <= 10");
+$low_stock_count = ($res_low && $row_low = pg_fetch_assoc($res_low)) ? (int)$row_low['c'] : 0;
+
+// Data Supplier Terkini
+$supplier_list = pg_query($conn, "SELECT * FROM tb_supplier ORDER BY id_supplier DESC LIMIT 3");
+?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <title>Spica Admin</title>
-  <link rel="stylesheet" href="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/vendors/mdi/css/materialdesignicons.min.css">
-  <link rel="stylesheet" href="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/vendors/css/vendor.bundle.base.css">
-  <link rel="stylesheet" href="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/css/style.css">
-  <link rel="shortcut icon" href="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/images/favicon.png" /></head>
+  <title>Inventory Dashboard - SIMTI</title>
+
+  <!-- Google Fonts & Font Awesome -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/clean-ui.css">
+</head>
 <body>
-  <div class="container-scroller d-flex">
-    <?php include 'navbar.php';?>
-    <div class="container-fluid page-body-wrapper">
-      <nav class="navbar col-lg-12 col-12 px-0 py-0 py-lg-4 d-flex flex-row">
-        <div class="navbar-menu-wrapper d-flex align-items-center justify-content-end">
-          <button class="navbar-toggler navbar-toggler align-self-center" type="button" data-toggle="minimize">
-            <span class="mdi mdi-menu"></span>
-          </button>
-          <div class="navbar-brand-wrapper">
-            <a class="navbar-brand brand-logo" href="index.html"><img src="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/images/logo.svg" alt="logo"/></a>
-            <a class="navbar-brand brand-logo-mini" href="index.html"><img src="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/images/logo-mini.svg" alt="logo"/></a>
-          </div>
-          <h4 class="font-weight-bold mb-0 d-none d-md-block mt-1">Welcome back, Brandon Haynes</h4>
-          <ul class="navbar-nav navbar-nav-right">
-            <li class="nav-item">
-              <h4 class="mb-0 font-weight-bold d-none d-xl-block">Mar 12, 2019 - Apr 10, 2019</h4>
-            </li>
-            <li class="nav-item dropdown me-1">
-              <a class="nav-link count-indicator dropdown-toggle d-flex justify-content-center align-items-center" id="messageDropdown" href="#" data-bs-toggle="dropdown">
-                <i class="mdi mdi-calendar mx-0"></i>
-                <span class="count bg-info">2</span>
-              </a>
-              <div class="dropdown-menu dropdown-menu-right navbar-dropdown preview-list" aria-labelledby="messageDropdown">
-                <p class="mb-0 font-weight-normal float-left dropdown-header">Messages</p>
-                <a class="dropdown-item preview-item">
-                  <div class="preview-thumbnail">
-                      <img src="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/images/faces/face4.jpg" alt="image" class="profile-pic">
-                  </div>
-                  <div class="preview-item-content flex-grow">
-                    <h6 class="preview-subject ellipsis font-weight-normal">David Grey
-                    </h6>
-                    <p class="font-weight-light small-text text-muted mb-0">
-                      The meeting is cancelled
-                    </p>
-                  </div>
-                </a>
-                <a class="dropdown-item preview-item">
-                  <div class="preview-thumbnail">
-                      <img src="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/images/faces/face2.jpg" alt="image" class="profile-pic">
-                  </div>
-                  <div class="preview-item-content flex-grow">
-                    <h6 class="preview-subject ellipsis font-weight-normal">Tim Cook
-                    </h6>
-                    <p class="font-weight-light small-text text-muted mb-0">
-                      New product launch
-                    </p>
-                  </div>
-                </a>
-                <a class="dropdown-item preview-item">
-                  <div class="preview-thumbnail">
-                      <img src="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/images/faces/face3.jpg" alt="image" class="profile-pic">
-                  </div>
-                  <div class="preview-item-content flex-grow">
-                    <h6 class="preview-subject ellipsis font-weight-normal"> Johnson
-                    </h6>
-                    <p class="font-weight-light small-text text-muted mb-0">
-                      Upcoming board meeting
-                    </p>
-                  </div>
-                </a>
-              </div>
-            </li>
-            <li class="nav-item dropdown me-2">
-              <a class="nav-link count-indicator dropdown-toggle d-flex align-items-center justify-content-center" id="notificationDropdown" href="#" data-bs-toggle="dropdown">
-                <i class="mdi mdi-email-open mx-0"></i>
-                <span class="count bg-danger">1</span>
-              </a>
-              <div class="dropdown-menu dropdown-menu-right navbar-dropdown preview-list" aria-labelledby="notificationDropdown">
-                <p class="mb-0 font-weight-normal float-left dropdown-header">Notifications</p>
-                <a class="dropdown-item preview-item">
-                  <div class="preview-thumbnail">
-                    <div class="preview-icon bg-success">
-                      <i class="mdi mdi-information mx-0"></i>
-                    </div>
-                  </div>
-                  <div class="preview-item-content">
-                    <h6 class="preview-subject font-weight-normal">Application Error</h6>
-                    <p class="font-weight-light small-text mb-0 text-muted">
-                      Just now
-                    </p>
-                  </div>
-                </a>
-                <a class="dropdown-item preview-item">
-                  <div class="preview-thumbnail">
-                    <div class="preview-icon bg-warning">
-                      <i class="mdi mdi-settings mx-0"></i>
-                    </div>
-                  </div>
-                  <div class="preview-item-content">
-                    <h6 class="preview-subject font-weight-normal">Settings</h6>
-                    <p class="font-weight-light small-text mb-0 text-muted">
-                      Private message
-                    </p>
-                  </div>
-                </a>
-                <a class="dropdown-item preview-item">
-                  <div class="preview-thumbnail">
-                    <div class="preview-icon bg-info">
-                      <i class="mdi mdi-account-box mx-0"></i>
-                    </div>
-                  </div>
-                  <div class="preview-item-content">
-                    <h6 class="preview-subject font-weight-normal">New user registration</h6>
-                    <p class="font-weight-light small-text mb-0 text-muted">
-                      2 days ago
-                    </p>
-                  </div>
-                </a>
-              </div>
-            </li>
-          </ul>
-          <button class="navbar-toggler navbar-toggler-right d-lg-none align-self-center" type="button" data-toggle="offcanvas">
-            <span class="mdi mdi-menu"></span>
-          </button>
-        </div>
-        <div class="navbar-menu-wrapper navbar-search-wrapper d-none d-lg-flex align-items-center">
-          <ul class="navbar-nav mr-lg-2">
-            <li class="nav-item nav-search d-none d-lg-block">
-              <div class="input-group">
-                <input type="text" class="form-control" placeholder="Search Here..." aria-label="search" aria-describedby="search">
-              </div>
-            </li>
-          </ul>
-          <ul class="navbar-nav navbar-nav-right">
-            <li class="nav-item nav-profile dropdown">
-              <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" id="profileDropdown">
-                <img src="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/images/faces/face5.jpg" alt="profile"/>
-                <span class="nav-profile-name">Eleanor Richardson</span>
-              </a>
-              <div class="dropdown-menu dropdown-menu-right navbar-dropdown" aria-labelledby="profileDropdown">
-                <a class="dropdown-item">
-                  <i class="mdi mdi-settings text-primary"></i>
-                  Settings
-                </a>
-                <a class="dropdown-item">
-                  <i class="mdi mdi-logout text-primary"></i>
-                  Logout
-                </a>
-              </div>
-            </li>
-            <li class="nav-item">
-              <a href="#" class="nav-link icon-link">
-                <i class="mdi mdi-plus-circle-outline"></i>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a href="#" class="nav-link icon-link">
-                <i class="mdi mdi-web"></i>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a href="#" class="nav-link icon-link">
-                <i class="mdi mdi-clock-outline"></i>
-              </a>
-            </li>
-          </ul>
-        </div>
-      </nav>
-      <div class="main-panel">
-        <div class="content-wrapper">
-          <div class="row">
-            <div class="col-12 col-xl-6 grid-margin stretch-card">
-              <div class="row w-100 flex-grow">
-                <div class="col-md-12 grid-margin stretch-card">
-                  <div class="card">
-                    <div class="card-body">
-                      <p class="card-title">Website Audience Metrics</p>
-                      <p class="text-muted">25% more traffic than previous week</p>
-                      <div class="row mb-3">
-                        <div class="col-md-7">
-                          <div class="d-flex justify-content-between traffic-status">
-                            <div class="item">
-                              <p class="mb-">Users</p>
-                              <h5 class="font-weight-bold mb-0">93,956</h5>
-                              <div class="color-border"></div>
-                            </div>
-                            <div class="item">
-                              <p class="mb-">Bounce Rate</p>
-                              <h5 class="font-weight-bold mb-0">58,605</h5>
-                              <div class="color-border"></div>
-                            </div>
-                            <div class="item">
-                              <p class="mb-">Page Views</p>
-                              <h5 class="font-weight-bold mb-0">78,254</h5>
-                              <div class="color-border"></div>
-                            </div>
-                          </div>
-                        </div>
-                        <div class="col-md-5">
-                          <ul class="nav nav-pills nav-pills-custom justify-content-md-end" id="pills-tab-custom"
-                            role="tablist">
-                            <li class="nav-item">
-                              <a class="nav-link active" id="pills-home-tab-custom" data-toggle="pill"
-                                href="#pills-health" role="tab" aria-controls="pills-home" aria-selected="true">
-                                Day
-                              </a>
-                            </li>
-                            <li class="nav-item">
-                              <a class="nav-link" id="pills-profile-tab-custom" data-toggle="pill" href="#pills-career"
-                                role="tab" aria-controls="pills-profile" aria-selected="false">
-                                Week
-                              </a>
-                            </li>
-                            <li class="nav-item">
-                              <a class="nav-link" id="pills-contact-tab-custom" data-toggle="pill" href="#pills-music"
-                                role="tab" aria-controls="pills-contact" aria-selected="false">
-                                Month
-                              </a>
-                            </li>
-                          </ul>
-                        </div>
-                      </div>
-                      <canvas id="audience-chart"></canvas>
-                    </div>
-                  </div>
-                </div>
-                <div class="col-md-6 stretch-card">
-                  <div class="card">
-                    <div class="card-body">
-                      <div class="d-flex align-items-center justify-content-between flex-wrap">
-                        <p class="card-title">Weekly Balance</p>
-                        <p class="text-success font-weight-medium">20.15 %</p>
-                      </div>
-                      <div class="d-flex align-items-center flex-wrap mb-3">
-                        <h5 class="font-weight-normal mb-0 mb-md-1 mb-lg-0 me-3">$22.736</h5>
-                        <p class="text-muted mb-0">Avg Sessions</p>
-                      </div>
-                      <canvas id="balance-chart" height="130"></canvas>
-                    </div>
-                  </div>
-                </div>
-                <div class="col-md-6 stretch-card">
-                  <div class="card">
-                    <div class="card-body">
-                      <div class="d-flex align-items-center justify-content-between flex-wrap">
-                        <p class="card-title">Today Task</p>
-                        <p class="text-success font-weight-medium">45.39 %</p>
-                      </div>
-                      <div class="d-flex align-items-center flex-wrap mb-3">
-                        <h5 class="font-weight-normal mb-0 mb-md-1 mb-lg-0 me-3">17.247</h5>
-                        <p class="text-muted mb-0">Avg Sessions</p>
-                      </div>
-                      <canvas id="task-chart" height="130"></canvas>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="col-12 col-xl-6 grid-margin stretch-card">
-              <div class="row w-100 flex-grow">
-                <div class="col-md-6 grid-margin stretch-card">
-                  <div class="card">
-                    <div class="card-body">
-                      <p class="card-title">Regional Load</p>
-                      <p class="text-muted">Last update: 2 Hours ago</p>
-                      <div class="regional-chart-legend d-flex align-items-center flex-wrap mb-1"
-                        id="regional-chart-legend"></div>
-                      <canvas height="280" id="regional-chart"></canvas>
-                    </div>
-                  </div>
-                </div>
-                <div class="col-md-6 grid-margin stretch-card">
-                  <div class="card">
-                    <div class="card-body pb-0">
-                      <div class="d-flex align-items-center mb-4">
-                        <p class="card-title mb-0 me-1">Today activity</p>
-                        <div class="badge badge-info badge-pill">2</div>
-                      </div>
-                      <div class="d-flex flex-wrap pt-2">
-                        <div class="me-4 mb-lg-2 mb-xl-0">
-                          <p>Time On Site</p>
-                          <h4 class="font-weight-bold mb-0">77.15 %</h4>
-                        </div>
-                        <div>
-                          <p>Page Views</p>
-                          <h4 class="font-weight-bold mb-0">14.15 %</h4>
-                        </div>
-                      </div>
-                    </div>
-                    <canvas height="150" id="activity-chart"></canvas>
-                  </div>
-                </div>
-                <div class="col-md-12 stretch-card">
-                  <div class="card">
-                    <div class="card-body pb-0">
-                      <p class="card-title">Server Status 247</p>
-                      <div class="d-flex justify-content-between flex-wrap">
-                        <p class="text-muted">Last update: 2 Hours ago</p>
-                        <div class="d-flex align-items-center flex-wrap server-status-legend mt-3 mb-3 mb-md-0">
-                          <div class="item me-3">
-                            <div class="d-flex align-items-center">
-                              <div class="color-bullet"></div>
-                              <h5 class="font-weight-bold mb-0">128GB</h5>
-                            </div>
-                            <p class="mb-">Total Usage</p>
-                          </div>
-                          <div class="item me-3">
-                            <div class="d-flex align-items-center">
-                              <div class="color-bullet"></div>
-                              <h5 class="font-weight-bold mb-0">92%</h5>
-                            </div>
-                            <p class="mb-">Memory Usage</p>
-                          </div>
-                          <div class="item me-3">
-                            <div class="d-flex align-items-center">
-                              <div class="color-bullet"></div>
-                              <h5 class="font-weight-bold mb-0">16%</h5>
-                            </div>
-                            <p class="mb-">Disk Usage</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <canvas height="170" id="status-chart"></canvas>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-lg-12 grid-margin stretch-card">
-              <div class="card">
-                <div class="card-body">
-                  <h4 class="card-title">Financial management review</h4>
-                  <div class="table-responsive">
-                    <table class="table table-striped">
-                      <thead>
-                        <tr>
-                          <th>
-                            User
-                          </th>
-                          <th>
-                            First name
-                          </th>
-                          <th>
-                            Progress
-                          </th>
-                          <th>
-                            Amount
-                          </th>
-                          <th>
-                            Deadline
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <td class="py-1">
-                            <img src="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/images/faces/face1.jpg" alt="image"/>
-                          </td>
-                          <td>
-                            Herman Beck
-                          </td>
-                          <td>
-                            <div class="progress">
-                              <div class="progress-bar bg-success" role="progressbar" style="width: 25%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
-                            </div>
-                          </td>
-                          <td>
-                            $ 77.99
-                          </td>
-                          <td>
-                            May 15, 2015
-                          </td>
-                        </tr>
-                        <tr>
-                          <td class="py-1">
-                            <img src="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/images/faces/face2.jpg" alt="image"/>
-                          </td>
-                          <td>
-                            Messsy Adam
-                          </td>
-                          <td>
-                            <div class="progress">
-                              <div class="progress-bar bg-danger" role="progressbar" style="width: 75%" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"></div>
-                            </div>
-                          </td>
-                          <td>
-                            $245.30
-                          </td>
-                          <td>
-                            July 1, 2015
-                          </td>
-                        </tr>
-                        <tr>
-                          <td class="py-1">
-                            <img src="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/images/faces/face3.jpg" alt="image"/>
-                          </td>
-                          <td>
-                            John Richards
-                          </td>
-                          <td>
-                            <div class="progress">
-                              <div class="progress-bar bg-warning" role="progressbar" style="width: 90%" aria-valuenow="90" aria-valuemin="0" aria-valuemax="100"></div>
-                            </div>
-                          </td>
-                          <td>
-                            $138.00
-                          </td>
-                          <td>
-                            Apr 12, 2015
-                          </td>
-                        </tr>
-                        <tr>
-                          <td class="py-1">
-                            <img src="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/images/faces/face4.jpg" alt="image"/>
-                          </td>
-                          <td>
-                            Peter Meggik
-                          </td>
-                          <td>
-                            <div class="progress">
-                              <div class="progress-bar bg-primary" role="progressbar" style="width: 50%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
-                            </div>
-                          </td>
-                          <td>
-                            $ 77.99
-                          </td>
-                          <td>
-                            May 15, 2015
-                          </td>
-                        </tr>
-                        <tr>
-                          <td class="py-1">
-                            <img src="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/images/faces/face5.jpg" alt="image"/>
-                          </td>
-                          <td>
-                            Edward
-                          </td>
-                          <td>
-                            <div class="progress">
-                              <div class="progress-bar bg-danger" role="progressbar" style="width: 35%" aria-valuenow="35" aria-valuemin="0" aria-valuemax="100"></div>
-                            </div>
-                          </td>
-                          <td>
-                            $ 160.25
-                          </td>
-                          <td>
-                            May 03, 2015
-                          </td>
-                        </tr>
-                        <tr>
-                          <td class="py-1">
-                            <img src="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/images/faces/face6.jpg" alt="image"/>
-                          </td>
-                          <td>
-                            John Doe
-                          </td>
-                          <td>
-                            <div class="progress">
-                              <div class="progress-bar bg-info" role="progressbar" style="width: 65%" aria-valuenow="65" aria-valuemin="0" aria-valuemax="100"></div>
-                            </div>
-                          </td>
-                          <td>
-                            $ 123.21
-                          </td>
-                          <td>
-                            April 05, 2015
-                          </td>
-                        </tr>
-                        <tr>
-                          <td class="py-1">
-                            <img src="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/images/faces/face7.jpg" alt="image"/>
-                          </td>
-                          <td>
-                            Henry Tom
-                          </td>
-                          <td>
-                            <div class="progress">
-                              <div class="progress-bar bg-warning" role="progressbar" style="width: 20%" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100"></div>
-                            </div>
-                          </td>
-                          <td>
-                            $ 150.00
-                          </td>
-                          <td>
-                            June 16, 2015
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-md-4 grid-margin stretch-card">
-              <div class="card bg-facebook d-flex align-items-center">
-                <div class="card-body py-5">
-                  <div
-                    class="d-flex flex-row align-items-center flex-wrap justify-content-md-center justify-content-xl-start py-1">
-                    <i class="mdi mdi-facebook text-white icon-lg"></i>
-                    <div class="ms-3 ml-md-0 ml-xl-3">
-                      <h5 class="text-white font-weight-bold">2.62 Subscribers</h5>
-                      <p class="mt-2 text-white card-text">You main list growing</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-4 grid-margin stretch-card">
-              <div class="card bg-google d-flex align-items-center">
-                <div class="card-body py-5">
-                  <div
-                    class="d-flex flex-row align-items-center flex-wrap justify-content-md-center justify-content-xl-start py-1">
-                    <i class="mdi mdi-google-plus text-white icon-lg"></i>
-                    <div class="ms-3 ml-md-0 ml-xl-3">
-                      <h5 class="text-white font-weight-bold">3.4k Followers</h5>
-                      <p class="mt-2 text-white card-text">You main list growing</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-4 grid-margin stretch-card">
-              <div class="card bg-twitter d-flex align-items-center">
-                <div class="card-body py-5">
-                  <div
-                    class="d-flex flex-row align-items-center flex-wrap justify-content-md-center justify-content-xl-start py-1">
-                    <i class="mdi mdi-twitter text-white icon-lg"></i>
-                    <div class="ms-3 ml-md-0 ml-xl-3">
-                      <h5 class="text-white font-weight-bold">3k followers</h5>
-                      <p class="mt-2 text-white card-text">You main list growing</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <footer class="footer">
-          <div class="card">
-            <div class="card-body">
-              <div class="d-sm-flex justify-content-center justify-content-sm-between py-2">
-                <span class="text-muted text-center text-sm-left d-block d-sm-inline-block">Copyright © <a href="https://www.bootstrapdash.com/" target="_blank">bootstrapdash.com </a>2021</span>
-                <span class="float-none float-sm-right d-block mt-1 mt-sm-0 text-center">Only the best <a href="https://www.bootstrapdash.com/" target="_blank"> Bootstrap dashboard </a> templates</span>
-              </div>
-            </div>
-          </div>
-        </footer>
+
+  <!-- Top Segmented Capsule Navigation (Persis Image 1) -->
+  <?php include_once __DIR__ . '/../../include/bento_header.php'; ?>
+
+  <!-- Main Bento Content Container -->
+  <main class="bento-container">
+    
+    <!-- Title & Top Actions Row -->
+    <div class="bento-header-row">
+      <div style="display: flex; align-items: center; gap: 14px;">
+        <h1 class="bento-title">Inventory Overview</h1>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <a href="/backend/admin/pembelian/transaksi_pembelian.php" class="bento-btn bento-btn-dark">
+          <i class="fa-solid fa-cart-shopping"></i>
+          <span>Transaksi</span>
+        </a>
+        <a href="/backend/admin/barang/tambah_data_barang.php" class="bento-btn bento-btn-lime">
+          <i class="fa-solid fa-plus"></i>
+          <span>Tambah Barang</span>
+        </a>
       </div>
     </div>
-  </div>
 
-<script src="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/vendors/js/vendor.bundle.base.js"></script>
-  <script src="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/vendors/chart.js/Chart.min.js"></script>
-  <script src="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/js/jquery.cookie.js" type="text/javascript"></script>
-  <script src="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/js/off-canvas.js"></script>
-  <script src="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/js/hoverable-collapse.js"></script>
-  <script src="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/js/template.js"></script>
-  <script src="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/js/dashboard.js"></script>
+    <!-- Top Bento Metrics Grid -->
+    <div class="bento-grid-metrics">
+      
+      <!-- Left Subgrid: 3 Dark Cards (Image 1 Style) -->
+      <div class="bento-subgrid-metrics">
+        
+        <!-- Metric 1: Total Stok Unit -->
+        <div class="bento-card">
+          <div class="bento-card-label">Total Unit Fisik</div>
+          <div class="bento-card-value"><?= number_format($total_stok) ?> <span style="font-size: 1rem; color: var(--text-sage); font-weight: 500;">Unit</span></div>
+          <div class="bento-card-sub">
+            <i class="fa-solid fa-boxes-stacked" style="color: var(--c-lime);"></i>
+            <span>Tersimpan di gudang</span>
+          </div>
+          <div class="bento-progress-track">
+            <div class="bento-progress-fill" style="width: 78%;"></div>
+          </div>
+          <div class="bento-avatar-stack">
+            <div class="bento-stack-item">K1</div>
+            <div class="bento-stack-item">K2</div>
+            <div class="bento-stack-item">K3</div>
+          </div>
+        </div>
+
+        <!-- Metric 2: Master Barang -->
+        <div class="bento-card">
+          <div class="bento-card-label">Item Terdaftar</div>
+          <div class="bento-card-value"><?= number_format($total_barang) ?> <span style="font-size: 1rem; color: var(--text-sage); font-weight: 500;">SKU</span></div>
+          <div class="bento-card-sub">
+            <i class="fa-solid fa-tags" style="color: var(--c-sage);"></i>
+            <span>Katalog Master Aktif</span>
+          </div>
+          <div class="bento-progress-track">
+            <div class="bento-progress-fill" style="width: 62%; background: var(--c-sage);"></div>
+          </div>
+          <div style="font-size: 0.775rem; color: var(--text-muted); margin-top: 14px;">
+            Terhubung Supabase Cloud
+          </div>
+        </div>
+
+        <!-- Metric 3: Mitra Jaringan -->
+        <div class="bento-card">
+          <div class="bento-card-label">Mitra & Customer</div>
+          <div class="bento-card-value"><?= number_format($total_supplier + $total_customer) ?></div>
+          <div class="bento-card-sub">
+            <i class="fa-solid fa-users" style="color: #38bdf8;"></i>
+            <span><?= $total_supplier ?> Supplier &bull; <?= $total_customer ?> Customer</span>
+          </div>
+          <div class="bento-progress-track">
+            <div class="bento-progress-fill" style="width: 85%; background: #38bdf8;"></div>
+          </div>
+          <div style="font-size: 0.775rem; color: var(--text-muted); margin-top: 14px;">
+            Sinkronisasi Realtime
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right Card: Electric Lime Featured Card (Directly from Image 1!) -->
+      <div class="bento-card-highlight">
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+            <div class="bento-card-label" style="color: var(--c-mint);">Restock Alert</div>
+            <span class="bento-lime-badge">
+              <i class="fa-solid fa-bell"></i>
+              <span>Live Warning</span>
+            </span>
+          </div>
+          
+          <div style="font-size: 2.25rem; font-weight: 800; color: #ffffff; line-height: 1.1; margin-bottom: 6px;">
+            <?= $low_stock_count ?> Barang
+          </div>
+          <p style="font-size: 0.825rem; color: var(--text-sage); line-height: 1.5; margin-bottom: 20px;">
+            <?= ($low_stock_count > 0) ? "Perlu pemesanan ulang ke supplier karena stok tersisa <= 10 unit." : "Seluruh stok barang dalam kondisi aman terkendali."; ?>
+          </p>
+        </div>
+
+        <div>
+          <a href="/backend/admin/barang/data_stok.php" class="bento-btn bento-btn-lime" style="width: 100%; justify-content: center;">
+            <span>Kelola Stok Barang</span>
+            <i class="fa-solid fa-arrow-right"></i>
+          </a>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Capsule Filter Bar (Image 1 Style) -->
+    <div class="bento-filters-row">
+      <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-sage); margin-right: 4px;">
+        Filter Cepat:
+      </span>
+      <a href="/backend/admin/barang/data_barang.php" class="bento-filter-pill active">
+        <i class="fa-solid fa-boxes-stacked"></i> Semua Barang
+      </a>
+      <a href="/backend/admin/barang/data_stok.php" class="bento-filter-pill">
+        <i class="fa-solid fa-triangle-exclamation"></i> Stok Kritis (<= 10)
+      </a>
+      <a href="/backend/admin/supplier/data_supplier.php" class="bento-filter-pill">
+        <i class="fa-solid fa-truck"></i> Mitra Supplier
+      </a>
+      <a href="/backend/admin/customer/data_customer.php" class="bento-filter-pill">
+        <i class="fa-solid fa-users"></i> Data Customer
+      </a>
+      <a href="/backend/admin/pembelian/transaksi_pembelian.php" class="bento-filter-pill">
+        <i class="fa-solid fa-calendar"></i> Transaksi Terkini
+      </a>
+    </div>
+
+    <!-- The Signature Bento Split: Light Bento Card vs Dark Bento Card (Image 1 Bottom) -->
+    <div class="bento-split-grid">
+      
+      <!-- LEFT: The Contrasting Pale Mint / Crisp Card -->
+      <div class="bento-card-light">
+        <div class="bento-section-title">
+          <span>Stok Inventaris Utama</span>
+          <a href="/backend/admin/barang/data_barang.php" style="font-size: 0.8rem; font-weight: 700; color: var(--c-forest-900); text-decoration: underline;">
+            Lihat Semua
+          </a>
+        </div>
+
+        <div class="bento-light-list">
+          <?php if ($barang_list && pg_num_rows($barang_list) > 0): ?>
+            <?php while ($b = pg_fetch_assoc($barang_list)): ?>
+              <div class="bento-light-item">
+                <div class="bento-light-item-left">
+                  <div class="bento-light-avatar">
+                    <i class="fa-solid fa-box-open"></i>
+                  </div>
+                  <div>
+                    <div class="bento-light-name"><?= htmlspecialchars($b['nama_barang']) ?></div>
+                    <div class="bento-light-meta">#<?= htmlspecialchars($b['kd_barang']) ?> &bull; Sisa: <strong><?= (int)$b['stok'] ?> Unit</strong></div>
+                  </div>
+                </div>
+
+                <div style="text-align: right;">
+                  <div class="bento-light-price">Rp <?= number_format($b['harga_jual'] ?? 0, 0, ',', '.') ?></div>
+                  <div>
+                    <?php if (($b['stok'] ?? 0) <= 10): ?>
+                      <span class="bento-status-pill bento-status-low">Menipis</span>
+                    <?php else: ?>
+                      <span class="bento-status-pill bento-status-safe">Aman</span>
+                    <?php endif; ?>
+                  </div>
+                </div>
+              </div>
+            <?php endwhile; ?>
+          <?php else: ?>
+            <div style="text-align: center; padding: 24px; color: #64748b;">
+              Belum ada data barang di database.
+            </div>
+          <?php endif; ?>
+        </div>
+      </div>
+
+      <!-- RIGHT: The Deep Dark Bento Card -->
+      <div class="bento-card-dark">
+        <div class="bento-section-title">
+          <span>Ringkasan Transaksi & Cloud</span>
+          <span class="bento-filter-pill" style="padding: 4px 10px; font-size: 0.725rem;">
+            <span class="bento-pulse-dot"></span> PostgreSQL Live
+          </span>
+        </div>
+
+        <!-- 4 Sub-Tiles -->
+        <div class="bento-dark-grid">
+          <div class="bento-metric-tile">
+            <div class="bento-tile-label">Total Pembelian (PO)</div>
+            <div class="bento-tile-value"><?= number_format($total_pembelian) ?></div>
+            <div style="font-size: 0.75rem; color: var(--text-sage); margin-top: 4px;">Pemesanan stok</div>
+          </div>
+
+          <div class="bento-metric-tile">
+            <div class="bento-tile-label">Total Penjualan</div>
+            <div class="bento-tile-value"><?= number_format($total_penjualan) ?></div>
+            <div style="font-size: 0.75rem; color: var(--text-sage); margin-top: 4px;">Faktur terbit</div>
+          </div>
+
+          <div class="bento-metric-tile">
+            <div class="bento-tile-label">Mitra Supplier</div>
+            <div class="bento-tile-value"><?= number_format($total_supplier) ?></div>
+            <div style="font-size: 0.75rem; color: var(--text-sage); margin-top: 4px;">Vendor terverifikasi</div>
+          </div>
+
+          <div class="bento-metric-tile">
+            <div class="bento-tile-label">Pelanggan Aktif</div>
+            <div class="bento-tile-value"><?= number_format($total_customer) ?></div>
+            <div style="font-size: 0.75rem; color: var(--text-sage); margin-top: 4px;">Akun terhubung</div>
+          </div>
+        </div>
+
+        <!-- Detail Box -->
+        <div style="background: var(--c-forest-700); border: 1px solid var(--border-glass); border-radius: var(--radius-bento-sm); padding: 18px; margin-bottom: 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span style="font-size: 0.85rem; color: var(--text-sage);">Status Sinkronisasi</span>
+            <span style="font-size: 0.85rem; font-weight: 700; color: var(--c-lime); font-family: var(--font-mono);">ONLINE 100%</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span style="font-size: 0.85rem; color: var(--text-sage);">Server Region</span>
+            <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-white);">Tokyo (ap-northeast-1)</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 0.85rem; color: var(--text-sage);">Vercel Deployment Ready</span>
+            <span style="font-size: 0.85rem; font-weight: 600; color: var(--c-mint);">Siap Deploy</span>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+          <a href="/backend/admin/pembelian/pembelian_barang.php" class="bento-btn bento-btn-lime" style="flex: 1; justify-content: center;">
+            <i class="fa-solid fa-plus"></i> Input Pembelian Stok
+          </a>
+          <a href="/backend/admin/penjualan/input_penjualan.php" class="bento-btn bento-btn-white" style="flex: 1; justify-content: center;">
+            <i class="fa-solid fa-receipt"></i> Input Penjualan
+          </a>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Clean Footer -->
+  <footer style="text-align: center; padding: 24px; border-top: 1px solid var(--border-glass); font-size: 0.825rem; color: var(--text-muted);">
+    &copy; <?= date('Y') ?> <strong>SIMTI Inventory</strong> &bull; Terintegrasi dengan <strong>Supabase PostgreSQL</strong>
+  </footer>
+
 </body>
-
 </html>

@@ -1,116 +1,225 @@
+<?php
+$current_page = basename($_SERVER['PHP_SELF']);
+$supplier_user = $_SESSION['username'] ?? 'Supplier';
+?>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
-/* Sidebar Header Styles */
-.sidebar-brand-wrapper {
-    padding: 15px 20px; /* Balanced padding */
-    transition: background 0.3s ease; /* Smooth transition for hover */
-}
+  #sidebar {
+    background: #0f172a !important;
+    width: 260px !important;
+    min-height: 100vh;
+    border-right: 1px solid rgba(255, 255, 255, 0.06);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
 
-.sidebar-brand {
+  .sidebar-brand-wrapper {
+    padding: 24px 20px 20px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .brand-logo-container {
     display: flex;
     align-items: center;
+    gap: 12px;
     text-decoration: none;
-    transition: transform 0.2s ease, opacity 0.2s ease; /* Smooth hover effect */
-}
+  }
 
-.sidebar-brand:hover {
-    transform: translateY(-2px); /* Subtle lift on hover */
-    opacity: 0.9; /* Slight fade for interactivity */
-}
+  .brand-logo-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 18px;
+    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.35);
+  }
 
-.sidebar-brand img {
-    width: 60px; /* Slightly smaller logo for balance */
-    height: auto;
-    margin-right: 12px; /* Consistent spacing */
-    border-radius: 8px; /* Rounded corners for a modern look */
-}
+  .brand-logo-text {
+    font-weight: 800;
+    font-size: 1.25rem;
+    color: #ffffff;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
 
-.sidebar-brand-text {
-    font-family: 'Roboto', sans-serif; /* Modern, professional font */
-    font-size: 22px; /* Slightly smaller for elegance */
-    font-weight: 700; /* Bold but not overly heavy */
-    color: #ffffff; /* High contrast white */
+  .brand-logo-sub {
+    font-size: 0.725rem;
+    color: #94a3b8;
+    font-weight: 500;
+  }
+
+  .nav-section-title {
+    font-size: 0.675rem;
+    font-weight: 700;
+    color: #475569;
     text-transform: uppercase;
-    letter-spacing: 1.5px; /* Slightly wider for clarity */
-    line-height: 1.2; /* Improved readability */
-}
+    letter-spacing: 0.08em;
+    padding: 18px 20px 8px 20px;
+    margin: 0;
+  }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .sidebar-brand-wrapper {
-        padding: 10px 15px; /* Reduced padding for smaller screens */
-    }
+  .sidebar-nav {
+    list-style: none;
+    padding: 12px 10px;
+    margin: 0;
+    flex: 1;
+  }
 
-    .sidebar-brand img {
-        width: 50px; /* Smaller logo on mobile */
-    }
+  .sidebar-nav .nav-item {
+    margin-bottom: 3px;
+  }
 
-    .sidebar-brand-text {
-        font-size: 18px; /* Smaller font on mobile */
-        letter-spacing: 1px;
-    }
-}
+  .sidebar-nav .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    color: #94a3b8;
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 600;
+    transition: all 0.18s ease;
+  }
+
+  .sidebar-nav .nav-link i {
+    width: 20px;
+    text-align: center;
+    font-size: 1rem;
+    color: #64748b;
+  }
+
+  .sidebar-nav .nav-link:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: #ffffff;
+    transform: translateX(3px);
+  }
+
+  .sidebar-nav .nav-link:hover i {
+    color: #38bdf8;
+  }
+
+  .sidebar-nav .nav-item.active .nav-link {
+    background: #0ea5e9;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.35);
+  }
+
+  .sidebar-nav .nav-item.active .nav-link i {
+    color: #ffffff;
+  }
+
+  .sidebar-user-footer {
+    padding: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .user-info-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .user-avatar-pill {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
+    color: white;
+    font-weight: 700;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .user-name-text {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #f1f5f9;
+    line-height: 1.2;
+  }
+
+  .user-role-badge {
+    font-size: 0.7rem;
+    color: #38bdf8;
+    font-weight: 600;
+  }
+
+  .logout-btn-link {
+    color: #ef4444;
+    font-size: 1rem;
+    padding: 8px;
+    border-radius: 8px;
+    transition: background 0.2s ease;
+    text-decoration: none;
+  }
+
+  .logout-btn-link:hover {
+    background: rgba(239, 68, 68, 0.15);
+  }
 </style>
 
-
 <nav class="sidebar sidebar-offcanvas" id="sidebar">
-  <!-- Header Section -->
-<div class="sidebar-brand-wrapper d-flex align-items-center justify-content-center">
-    <a class="sidebar-brand brand-logo" href="/Web-Inventory/backend/supplier/index_suplier.php" aria-label="SIMTI Supplier Dashboard">
-        <img src="/Web-Inventory/assets/images/logo.png" alt="SIMTI Logo"/>
-        <span class="sidebar-brand-text">SIMTI</span>
-    </a>
-</div>
-  
-  <ul class="nav">
-    <!-- Dashboard -->
-    <li class="nav-item">
-      <a class="nav-link" href="/Web-Inventory/backend/supplier/index.php">
-        <i class="mdi mdi-view-quilt menu-icon"></i>
-        <span class="menu-title">Dashboard</span>
+  <div>
+    <div class="sidebar-brand-wrapper">
+      <a class="brand-logo-container" href="/backend/suplier/index_suplier.php">
+        <div class="brand-logo-icon">
+          <i class="fa-solid fa-truck"></i>
+        </div>
+        <div>
+          <div class="brand-logo-text">SIMTI</div>
+          <div class="brand-logo-sub">Portal Supplier</div>
+        </div>
       </a>
-    </li>
+    </div>
 
-    <!-- Purchase Orders -->
-    <li class="nav-item">
-      <a class="nav-link" data-bs-toggle="collapse" href="#pembelian" aria-expanded="false" aria-controls="pembelian">
-        <i class="mdi mdi-cart menu-icon"></i>
-        <span class="menu-title">Purchase Orders</span>
-        <i class="menu-arrow"></i>
-      </a>
-      <div class="collapse" id="pembelian">
-        <ul class="nav flex-column sub-menu">
-          <li class="nav-item">
-            <a class="nav-link" href="/Web-Inventory/backend/supplier/pembelian/transaksi_pembelian.php">View Orders</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/Web-Inventory/backend/supplier/pembelian/detail_pembelian.php">Order Details</a>
-          </li>
-        </ul>
+    <ul class="sidebar-nav">
+      <li class="nav-section-title">Menu Utama</li>
+      <li class="nav-item <?= ($current_page == 'index_suplier.php') ? 'active' : '' ?>">
+        <a class="nav-link" href="/backend/suplier/index_suplier.php">
+          <i class="fa-solid fa-chart-pie"></i>
+          <span>Dashboard</span>
+        </a>
+      </li>
+
+      <li class="nav-section-title">Pesanan Stok</li>
+      <li class="nav-item <?= in_array($current_page, ['transaksi_pembelian.php', 'detail_pembelian.php']) ? 'active' : '' ?>">
+        <a class="nav-link" href="/backend/suplier/pembelian/transaksi_pembelian.php">
+          <i class="fa-solid fa-clipboard-check"></i>
+          <span>Purchase Order (PO)</span>
+        </a>
+      </li>
+      <li class="nav-item <?= ($current_page == 'pembelian_barang.php') ? 'active' : '' ?>">
+        <a class="nav-link" href="/backend/suplier/pembelian/pembelian_barang.php">
+          <i class="fa-solid fa-box-open"></i>
+          <span>Pengiriman Barang</span>
+        </a>
+      </li>
+    </ul>
+  </div>
+
+  <div class="sidebar-user-footer">
+    <div class="user-info-wrap">
+      <div class="user-avatar-pill">
+        <?= strtoupper(substr($supplier_user, 0, 1)) ?>
       </div>
-    </li>
-
-    <!-- Delivery Schedules -->
-    <li class="nav-item">
-      <a class="nav-link" href="/Web-Inventory/backend/supplier/pengiriman/data_pengiriman.php">
-        <i class="mdi mdi-truck menu-icon"></i>
-        <span class="menu-title">Delivery Schedules</span>
-      </a>
-    </li>
-
-    <!-- Payment Status -->
-    <li class="nav-item">
-      <a class="nav-link" href="/Web-Inventory/backend/supplier/pembayaran/data_pembayaran.php">
-        <i class="mdi mdi-currency-usd menu-icon"></i>
-        <span class="menu-title">Payment Status</span>
-      </a>
-    </li>
-
-    <!-- Logout -->
-    <li class="nav-item">
-      <a class="nav-link text-danger" href="/Web-Inventory/proses.php?action=logout">
-        <i class="mdi mdi-logout menu-icon"></i>
-        <span class="menu-title">Logout</span>
-      </a>
-    </li>
-  </ul>
+      <div>
+        <div class="user-name-text"><?= htmlspecialchars($supplier_user) ?></div>
+        <div class="user-role-badge">● Mitra Supplier</div>
+      </div>
+    </div>
+    <a href="/proses.php?action=logout" class="logout-btn-link" title="Keluar / Logout" onclick="return confirm('Apakah Anda yakin ingin logout?');">
+      <i class="fa-solid fa-arrow-right-from-bracket"></i>
+    </a>
+  </div>
 </nav>

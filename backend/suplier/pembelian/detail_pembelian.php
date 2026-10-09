@@ -1,10 +1,10 @@
-<?php
-require '../../../koneksi.php';
+﻿<?php
+require_once __DIR__ . '/../../../koneksi.php';
 session_start();
 
 // Input sanitization
-$kd_barang = filter_input(INPUT_GET, 'kd_barang', FILTER_SANITIZE_STRING) ?? '';
-$no_pembelian = filter_input(INPUT_GET, 'no_pembelian', FILTER_SANITIZE_STRING) ?? '';
+$kd_barang = isset($_GET['kd_barang']) ? trim($_GET['kd_barang']) : '';
+$no_pembelian = isset($_GET['no_pembelian']) ? trim($_GET['no_pembelian']) : '';
 $page = filter_input(INPUT_GET, 'halaman', FILTER_VALIDATE_INT, ['options' => ['default' => 1, 'min_range' => 1]]) ?? 1;
 $per_page = 5;
 $start = ($page - 1) * $per_page;
@@ -14,16 +14,12 @@ $data = null;
 // Fetch user type
 $tipe_user = 'Guest';
 if (isset($_SESSION['user_id'])) {
-    $user_id = filter_var($_SESSION['user_id'], FILTER_VALIDATE_INT);
+    $user_id = (int)$_SESSION['user_id'];
     try {
-        $stmt = $conn->prepare("SELECT tipe_user FROM user WHERE id = ?");
-        $stmt->bind_param("i", $user_id);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        if ($result->num_rows > 0) {
-            $tipe_user = $result->fetch_assoc()['tipe_user'];
+        $res_user = pg_query($conn, "SELECT tipe_user FROM \"user\" WHERE id = '$user_id'");
+        if ($res_user && pg_num_rows($res_user) > 0) {
+            $tipe_user = pg_fetch_assoc($res_user)['tipe_user'];
         }
-        $stmt->close();
     } catch (Exception $e) {
         error_log("Error fetching user type: " . $e->getMessage());
     }
@@ -32,47 +28,25 @@ if (isset($_SESSION['user_id'])) {
 // Search and pagination logic
 try {
     if ($no_pembelian || $kd_barang) {
-        $query = "SELECT * FROM detail_pembelian WHERE 1=1";
-        $count_query = "SELECT COUNT(*) as total FROM detail_pembelian WHERE 1=1";
-        $params = [];
-        $types = '';
-
+        $where = [];
         if ($no_pembelian) {
-            $query .= " AND no_pembelian = ?";
-            $count_query .= " AND no_pembelian = ?";
-            $params[] = $no_pembelian;
-            $types .= 's';
+            $esc_no = pg_escape_string($conn, $no_pembelian);
+            $where[] = "no_pembelian = '$esc_no'";
         }
         if ($kd_barang) {
-            $query .= " AND kd_barang = ?";
-            $count_query .= " AND kd_barang = ?";
-            $params[] = $kd_barang;
-            $types .= 's';
+            $esc_kd = pg_escape_string($conn, $kd_barang);
+            $where[] = "kd_barang = '$esc_kd'";
         }
+        $where_sql = count($where) > 0 ? "WHERE " . implode(" AND ", $where) : "";
 
         // Count total rows for pagination
-        $stmt_total = $conn->prepare($count_query);
-        if ($params) {
-            $stmt_total->bind_param($types, ...$params);
-        }
-        $stmt_total->execute();
-        $total_rows = $stmt_total->get_result()->fetch_assoc()['total'] ?? 0;
+        $count_res = pg_query($conn, "SELECT COUNT(*) as total FROM detail_pembelian $where_sql");
+        $total_rows = $count_res ? (int)(pg_fetch_assoc($count_res)['total'] ?? 0) : 0;
         $pages = ceil($total_rows / $per_page);
-        $stmt_total->close();
 
         // Fetch paginated data
-        $query .= " LIMIT ?, ?";
-        $params[] = $start;
-        $params[] = $per_page;
-        $types .= 'ii';
-
-        $stmt = $conn->prepare($query);
-        if ($params) {
-            $stmt->bind_param($types, ...$params);
-        }
-        $stmt->execute();
-        $data = $stmt->get_result();
-        $stmt->close();
+        $query = "SELECT * FROM detail_pembelian $where_sql LIMIT $per_page OFFSET $start";
+        $data = pg_query($conn, $query);
     }
 } catch (Exception $e) {
     error_log("Error executing query: " . $e->getMessage());
@@ -85,14 +59,16 @@ try {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Detail Pembelian - SIMTI</title>
-    <link rel="stylesheet" href="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/vendors/mdi/css/materialdesignicons.min.css">
-    <link rel="stylesheet" href="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/vendors/css/vendor.bundle.base.css">
-    <link rel="stylesheet" href="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/css/style.css">
-    <link rel="stylesheet" href="/Web-Inventory/assets/css/custom.css">
+    <link rel="stylesheet" href="/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/vendors/mdi/css/materialdesignicons.min.css">
+    <link rel="stylesheet" href="/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/vendors/css/vendor.bundle.base.css">
+    <link rel="stylesheet" href="/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/clean-ui.css">
+    <link rel="stylesheet" href="/assets/css/custom.css">
 </head>
 <body>
     <div class="container-scroller d-flex">
-        <?php include '../navbar.php'; ?>
+        <?php include_once __DIR__ . '/../navbar.php'; ?>
         <div class="container-fluid page-body-wrapper">
             <div class="main-panel">
                 <div class="content-wrapper">
@@ -128,8 +104,8 @@ try {
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                <?php if ($data && $data->num_rows > 0): ?>
-                                                    <?php $no = $start + 1; while ($row = $data->fetch_assoc()): ?>
+                                                <?php if ($data && pg_num_rows($data) > 0): ?>
+                                                    <?php $no = $start + 1; while ($row = pg_fetch_assoc($data)): ?>
                                                         <tr>
                                                             <td><?php echo $no++; ?></td>
                                                             <td><?php echo htmlspecialchars($row['kd_barang']); ?></td>
@@ -162,22 +138,21 @@ try {
                         </div>
                     </div>
                 </div>
-                <?php include '../../../include/footer.php'; ?>
+                <?php include_once __DIR__ . '/../../../include/footer.php'; ?>
             </div>
         </div>
     </div>
 
-    <script src="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/vendors/js/vendor.bundle.base.js"></script>
-    <script src="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/js/off-canvas.js"></script>
-    <script src="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/js/misc.js"></script>
-    <script src="/Web-Inventory/assets/js/custom.js"></script>
+    <script src="/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/vendors/js/vendor.bundle.base.js"></script>
+    <script src="/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/js/off-canvas.js"></script>
+    <script src="/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/js/misc.js"></script>
+    <script src="/assets/js/custom.js"></script>
 </body>
 </html>
 
 <?php
-// Clean up resources
-if (isset($data)) {
-    $data->free();
+if (isset($data) && $data) {
+    pg_free_result($data);
 }
-$conn->close();
+pg_close($conn);
 ?>

@@ -1,89 +1,153 @@
 <?php
 session_start();
-include '../../../koneksi.php';
+if (!isset($_SESSION['username']) || $_SESSION['tipe_user'] != 'Administrator') {
+    header("Location: /login.php");
+    exit();
+}
+include_once __DIR__ . '/../../../koneksi.php';
 
 if (!$conn) {
-    die("Database connection failed: " . mysqli_connect_error());
+    die("Database connection failed: " . pg_last_error());
 }
 
-$sql = "SELECT * FROM tb_pembelian";
-$result = mysqli_query($conn, $sql);
-
-if (!$result) {
-    die("Query failed: " . mysqli_error($conn));
-}
+$sql = "SELECT p.*, s.nama_supplier 
+        FROM tb_pembelian p 
+        LEFT JOIN tb_supplier s ON p.id_supplier = s.id_supplier 
+        ORDER BY p.tanggal_pembelian DESC, p.no_pembelian DESC";
+$result = pg_query($conn, $sql);
 ?>
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Transaksi Pembelian - SIMTI</title>
-    <link rel="stylesheet" href="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/vendors/mdi/css/materialdesignicons.min.css">
-    <link rel="stylesheet" href="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/vendors/css/vendor.bundle.base.css">
-    <link rel="stylesheet" href="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/assets/css/clean-ui.css">
 </head>
 <body>
-    <div class="container-scroller d-flex">
-        <?php include '../navbar.php'; ?>
-        <div class="container-fluid page-body-wrapper">
-            <div class="main-panel">
-                <div class="content-wrapper">
-                    <div class="row">
-                        <div class="col-12 grid-margin stretch-card">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h4 class="card-title">Transaksi Pembelian</h4>
-                                    <p class="card-description">Last updated: <?php echo date('H:i A, F d, Y', strtotime('09:43 PM WIB')); ?></p>
-                                    <a href="pembelian_barang.php" class="btn btn-primary mb-3">Tambah Pembelian</a>
-                                    <div class="table-responsive">
-                                        <table class="table table-striped">
-                                            <thead>
-                                                <tr>
-                                                    <th>No Pembelian</th>
-                                                    <th>Tanggal Pembelian</th>
-                                                    <th>ID Supplier</th>
-                                                    <th>Total Barang</th>
-                                                    <th>Total Harga</th>
-                                                    <th>Aksi</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <?php
-                                                if (mysqli_num_rows($result) > 0) {
-                                                    while ($row = mysqli_fetch_assoc($result)) {
-                                                        ?>
-                                                        <tr>
-                                                            <td><?php echo htmlspecialchars($row['no_pembelian']); ?></td>
-                                                            <td><?php echo htmlspecialchars($row['tanggal_pembelian']); ?></td>
-                                                            <td><?php echo htmlspecialchars($row['id_supplier']); ?></td>
-                                                            <td><?php echo $row['total_barangall']; ?></td>
-                                                            <td><?php echo number_format($row['total_hargaall'], 2); ?></td>
-                                                            <td>
-                                                                <a href="edit_pembelian.php?no_pembelian=<?php echo htmlspecialchars($row['no_pembelian']); ?>" class="btn btn-warning btn-sm">Edit</a>
-                                                                <a href="hapus_pembelian.php?no_pembelian=<?php echo htmlspecialchars($row['no_pembelian']); ?>" class="btn btn-danger btn-sm" onclick="return confirm('Yakin ingin menghapus?');">Hapus</a>
-                                                            </td>
-                                                        </tr>
-                                                        <?php
-                                                    }
-                                                } else {
-                                                    echo "<tr><td colspan='6' class='text-center'>Tidak ada transaksi pembelian.</td></tr>";
-                                                }
-                                                ?>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+
+    <!-- Top Capsule Navigation -->
+    <?php include_once __DIR__ . '/../../../include/bento_header.php'; ?>
+
+    <main class="bento-container">
+        <!-- Header Row -->
+        <div class="bento-header-row">
+            <div style="display: flex; align-items: center; gap: 14px;">
+                <a href="/backend/admin/index_admin.php" class="bento-back-btn" title="Kembali ke Dashboard">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </a>
+                <h1 class="bento-title">Faktur Pembelian (PO)</h1>
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <a href="/backend/admin/supplier/data_supplier.php" class="bento-btn bento-btn-dark">
+                    <i class="fa-solid fa-truck"></i> Mitra Supplier
+                </a>
+                <a href="pembelian_barang.php" class="bento-btn bento-btn-lime">
+                    <i class="fa-solid fa-plus"></i> Buat Order Baru
+                </a>
             </div>
         </div>
-    </div>
-    <script src="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/vendors/js/vendor.bundle.base.js"></script>
-    <script src="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/js/off-canvas.js"></script>
+
+        <!-- Table Card -->
+        <div class="bento-table-card">
+            <div class="bento-table-header">
+                <div>
+                    <h3 style="color: var(--text-white); margin: 0; font-size: 1.15rem; font-weight: 700;">Daftar Invoice & Pembelian ke Supplier</h3>
+                    <p style="color: var(--text-sage); margin: 4px 0 0 0; font-size: 0.8rem;">Pencatatan pengadaan stok terintegrasi ke database Supabase</p>
+                </div>
+
+                <div class="bento-filter-pill">
+                    <span class="bento-pulse-dot"></span>
+                    <span><?= ($result ? pg_num_rows($result) : 0) ?> Dokumen Pembelian</span>
+                </div>
+            </div>
+
+            <div class="bento-table-wrap">
+                <table class="bento-table">
+                    <thead>
+                        <tr>
+                            <th>No. Pembelian</th>
+                            <th>Tanggal Transaksi</th>
+                            <th>Vendor Supplier</th>
+                            <th>Total Unit</th>
+                            <th>Total Pembelian</th>
+                            <th style="text-align: right;">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
+                        $hasData = false;
+                        if ($result && pg_num_rows($result) > 0) {
+                            while ($row = pg_fetch_assoc($result)) {
+                                $hasData = true;
+                                $no_pem = htmlspecialchars($row['no_pembelian']);
+                                ?>
+                                <tr>
+                                    <td>
+                                        <span style="font-family: var(--font-mono); font-weight: 700; color: var(--c-mint);">
+                                            #PO-<?= $no_pem ?>
+                                        </span>
+                                    </td>
+                                    <td style="color: var(--text-sage); font-size: 0.85rem;">
+                                        <i class="fa-regular fa-calendar" style="margin-right: 6px;"></i>
+                                        <?= htmlspecialchars($row['tanggal_pembelian']) ?>
+                                    </td>
+                                    <td>
+                                        <div style="font-weight: 700; color: #ffffff;">
+                                            <?= htmlspecialchars($row['nama_supplier'] ?: ('ID: ' . $row['id_supplier'])) ?>
+                                        </div>
+                                        <div style="font-size: 0.775rem; color: var(--text-sage);">#<?= htmlspecialchars($row['id_supplier']) ?></div>
+                                    </td>
+                                    <td>
+                                        <span class="bento-status-pill bento-status-safe" style="font-family: var(--font-mono);">
+                                            <?= (int)($row['total_barang'] ?? 0) ?> Item
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div style="font-family: var(--font-mono); font-weight: 700; color: var(--c-lime); font-size: 0.95rem;">
+                                            Rp <?= number_format($row['total_harga'] ?? 0, 0, ',', '.') ?>
+                                        </div>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <div style="display: inline-flex; gap: 8px;">
+                                            <a href="detail_pembelian.php?no_pembelian=<?= urlencode($no_pem) ?>" class="bento-btn bento-btn-sm bento-btn-info" title="Rincian Detail">
+                                                <i class="fa-solid fa-eye"></i> Detail
+                                            </a>
+                                            <a href="hapus_pembelian.php?no_pembelian=<?= urlencode($no_pem) ?>" class="bento-btn bento-btn-sm bento-btn-danger" onclick="return confirm('Hapus faktur pembelian ini?');" title="Hapus">
+                                                <i class="fa-solid fa-trash-can"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <?php
+                            }
+                        }
+                        if (!$hasData) {
+                            ?>
+                            <tr>
+                                <td colspan="6" style="text-align: center; padding: 48px 20px; color: var(--text-muted);">
+                                    <i class="fa-solid fa-file-invoice-dollar" style="font-size: 2.2rem; display: block; margin-bottom: 12px; color: var(--c-forest-600);"></i>
+                                    Belum ada transaksi pembelian tercatat.
+                                </td>
+                            </tr>
+                            <?php
+                        }
+                        ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <footer style="text-align: center; padding: 24px; border-top: 1px solid var(--border-glass); font-size: 0.825rem; color: var(--text-muted);">
+        &copy; <?= date('Y') ?> <strong>SIMTI Inventory</strong> &bull; Supabase PostgreSQL
+    </footer>
+
 </body>
 </html>
-<?php mysqli_close($conn); ?>
+<?php pg_close($conn); ?>

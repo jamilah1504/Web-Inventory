@@ -1,40 +1,40 @@
-<?php
+﻿<?php
 session_start();
-include '../../../koneksi.php';
+include_once __DIR__ . '/../../../koneksi.php';
 
 if (!$conn) {
-    die("Database connection failed: " . mysqli_connect_error());
+    die("Database connection failed: " . pg_last_error());
 }
 
 if (!isset($_GET['no_pembelian']) || empty($_GET['no_pembelian'])) {
     die("No pembelian tidak diberikan.");
 }
 
-$no_pembelian = mysqli_real_escape_string($conn, $_GET['no_pembelian']);
+$no_pembelian = pg_escape_string($conn, $_GET['no_pembelian']);
 $sql = "SELECT * FROM tb_pembelian WHERE no_pembelian = '$no_pembelian'";
-$result = mysqli_query($conn, $sql);
+$result = pg_query($conn, $sql);
 
-if (!$result || !($row = mysqli_fetch_assoc($result))) {
+if (!$result || !($row = pg_fetch_assoc($result))) {
     die("Data pembelian tidak ditemukan.");
 }
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $no_pembelian = mysqli_real_escape_string($conn, $_POST['no_pembelian']);
-    $tanggal_pembelian = mysqli_real_escape_string($conn, $_POST['tanggal_pembelian']);
-    $id_supplier = mysqli_real_escape_string($conn, $_POST['id_supplier']);
-    $total_barangall = mysqli_real_escape_string($conn, $_POST['total_barangall']);
-    $total_hargaall = mysqli_real_escape_string($conn, $_POST['total_hargaall']);
+    $no_pembelian = pg_escape_string($conn, $_POST['no_pembelian']);
+    $tanggal_pembelian = pg_escape_string($conn, $_POST['tanggal_pembelian']);
+    $id_supplier = pg_escape_string($conn, $_POST['id_supplier']);
+    $total_barangall = pg_escape_string($conn, $_POST['total_barangall']);
+    $total_hargaall = pg_escape_string($conn, $_POST['total_hargaall']);
 
     if (empty($no_pembelian) || empty($tanggal_pembelian) || empty($id_supplier) || empty($total_barangall) || empty($total_hargaall)) {
         die("Semua field wajib diisi.");
     }
 
     $sql = "UPDATE tb_pembelian SET no_pembelian = '$no_pembelian', tanggal_pembelian = '$tanggal_pembelian', id_supplier = '$id_supplier', total_barangall = '$total_barangall', total_hargaall = '$total_hargaall' WHERE no_pembelian = '$no_pembelian'";
-    if (mysqli_query($conn, $sql)) {
+    if (pg_query($conn, $sql)) {
         header("Location: transaksi_pembelian.php");
         exit();
     } else {
-        echo "Error: " . mysqli_error($conn);
+        echo "Error: " . pg_last_error($conn);
     }
 }
 ?>
@@ -45,13 +45,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Edit Pembelian - SIMTI</title>
-    <link rel="stylesheet" href="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/vendors/mdi/css/materialdesignicons.min.css">
-    <link rel="stylesheet" href="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/vendors/css/vendor.bundle.base.css">
-    <link rel="stylesheet" href="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/css/style.css">
+    <link rel="stylesheet" href="/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/vendors/mdi/css/materialdesignicons.min.css">
+    <link rel="stylesheet" href="/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/vendors/css/vendor.bundle.base.css">
+    <link rel="stylesheet" href="/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/clean-ui.css">
 </head>
 <body>
     <div class="container-scroller d-flex">
-        <?php include '../navbar.php'; ?>
+        <?php include_once __DIR__ . '/../navbar.php'; ?>
         <div class="container-fluid page-body-wrapper">
             <div class="main-panel">
                 <div class="content-wrapper">
@@ -93,8 +95,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             </div>
         </div>
     </div>
-    <script src="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/vendors/js/vendor.bundle.base.js"></script>
-    <script src="/Web-Inventory/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/js/off-canvas.js"></script>
+    <script src="/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/vendors/js/vendor.bundle.base.js"></script>
+    <script src="/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/js/off-canvas.js"></script>
 </body>
 </html>
-<?php mysqli_close($conn); ?>
+<?php pg_close($conn); ?>
