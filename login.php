@@ -20,6 +20,7 @@ if (isset($_SESSION['username']) && isset($_SESSION['tipe_user'])) {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Masuk - SIMTI Inventory</title>
+  <link rel="icon" type="image/png" href="/assets/images/favicon.png">
   
   <!-- Google Fonts & Font Awesome -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -241,9 +242,7 @@ if (isset($_SESSION['username']) && isset($_SESSION['tipe_user'])) {
         </div>
 
         <div class="auth-logo-title">
-          <div class="bento-brand-icon">
-            <i class="fa-solid fa-boxes-stacked"></i>
-          </div>
+          <img src="/assets/images/logo.png" alt="SIMTI Logo" style="width: 44px; height: 44px; border-radius: 14px; object-fit: contain; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);">
           <span>SIMTI</span>
         </div>
 

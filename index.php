@@ -76,6 +76,7 @@ $total_transaksi = $total_pembelian + $total_penjualan;
   <title>SIMTI - Modern Warehouse & Inventory Intelligence</title>
   <meta name="description" content="Sistem Informasi Inventory & Gudang Cerdas Berbasis Cloud PostgreSQL & Supabase dengan Arsitektur Bento UI Modern.">
   <meta name="theme-color" content="#051F20">
+  <link rel="icon" type="image/png" href="/assets/images/favicon.png">
 
   <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -107,9 +108,7 @@ $total_transaksi = $total_pembelian + $total_penjualan;
   <header class="landing-nav">
     <div class="landing-nav-inner">
       <a href="index.php" class="landing-brand">
-        <div class="landing-brand-icon">
-          <i class="fas fa-boxes-stacked"></i>
-        </div>
+        <img src="/assets/images/logo.png" alt="SIMTI Logo" style="width: 42px; height: 42px; border-radius: 14px; object-fit: contain; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);">
         <div class="landing-brand-text">
           <span>SIMTI</span>
           <span class="landing-brand-sub">Inventory Cloud</span>
@@ -700,9 +699,7 @@ $total_transaksi = $total_pembelian + $total_penjualan;
       
       <div>
         <div class="landing-brand" style="margin-bottom: 18px;">
-          <div class="landing-brand-icon">
-            <i class="fas fa-boxes-stacked"></i>
-          </div>
+          <img src="/assets/images/logo.png" alt="SIMTI Logo" style="width: 42px; height: 42px; border-radius: 14px; object-fit: contain; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);">
           <div class="landing-brand-text">
             <span>SIMTI</span>
             <span class="landing-brand-sub">Inventory Cloud</span>

@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#163832"/>
+      <stop offset="100%" stop-color="#0B2B26"/>
+    </linearGradient>
+    <linearGradient id="boxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#bef264"/>
+      <stop offset="100%" stop-color="#a3e635"/>
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#a3e635" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+
+  <!-- Container Base -->
+  <rect x="4" y="4" width="92" height="92" rx="26" fill="url(#bgGrad)" stroke="#235347" stroke-width="2"/>
+
+  <!-- 3 Stacked Crates Icon (Matching uploaded image) -->
+  <g filter="url(#glow)">
+    <!-- Top Center Crate -->
+    <path d="M 37 32 
+             C 37 28, 41 26, 45 26 
+             L 55 26 
+             C 59 26, 63 28, 63 32 
+             L 63 46 
+             C 63 49, 59 51, 55 51 
+             L 45 51 
+             C 41 51, 37 49, 37 46 
+             Z" 
+          fill="url(#boxGrad)"/>
+    <!-- Top Crate Inner Cutout / Flap -->
+    <rect x="46" y="26" width="8" height="12" rx="2" fill="#163832"/>
+
+    <!-- Bottom Left Crate -->
+    <path d="M 23 51 
+             C 23 47, 27 45, 31 45 
+             L 43 45 
+             C 47 45, 49 47, 49 51 
+             L 49 67 
+             C 49 71, 45 73, 41 73 
+             L 31 73 
+             C 27 73, 23 71, 23 67 
+             Z" 
+          fill="url(#boxGrad)"/>
+    <!-- Bottom Left Crate Cutout -->
+    <rect x="33" y="45" width="6" height="12" rx="2" fill="#163832"/>
+
+    <!-- Bottom Right Crate -->
+    <path d="M 51 51 
+             C 51 47, 53 45, 57 45 
+             L 69 45 
+             C 73 45, 77 47, 77 51 
+             L 77 67 
+             C 77 71, 73 73, 69 73 
+             L 59 73 
+             C 55 73, 51 71, 51 67 
+             Z" 
+          fill="url(#boxGrad)"/>
+    <!-- Bottom Right Crate Cutout -->
+    <rect x="61" y="45" width="6" height="12" rx="2" fill="#163832"/>
+  </g>
+</svg>

@@ -18,9 +18,7 @@ function is_bento_active($names, $cur_page, $cur_dir) {
 <header class="bento-nav-wrapper">
   <!-- Brand -->
   <a href="/backend/admin/index_admin.php" class="bento-brand">
-    <div class="bento-brand-icon">
-      <i class="fa-solid fa-boxes-stacked"></i>
-    </div>
+    <img src="/assets/images/logo.png" alt="SIMTI Logo" style="width: 38px; height: 38px; border-radius: 12px; object-fit: contain; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);">
     <div>
       <div class="bento-brand-name">SIMTI</div>
     </div>

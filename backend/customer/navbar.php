@@ -10,9 +10,7 @@ $cust_email = $_SESSION['username'] ?? 'customer@mail.com';
 <header class="bento-nav-wrapper">
   <!-- Brand -->
   <a href="/backend/customer/index_customer.php" class="bento-brand">
-    <div class="bento-brand-icon">
-      <i class="fa-solid fa-bag-shopping"></i>
-    </div>
+    <img src="/assets/images/logo.png" alt="SIMTI Logo" style="width: 38px; height: 38px; border-radius: 12px; object-fit: contain; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);">
     <div>
       <div class="bento-brand-name">SIMTI</div>
     </div>

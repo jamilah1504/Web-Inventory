@@ -10,9 +10,7 @@ $sup_email = $_SESSION['username'] ?? 'supplier@mail.com';
 <header class="bento-nav-wrapper">
   <!-- Brand -->
   <a href="/backend/suplier/index_suplier.php" class="bento-brand">
-    <div class="bento-brand-icon" style="background: linear-gradient(135deg, var(--c-forest-700) 0%, var(--c-lime-dark) 100%);">
-      <i class="fa-solid fa-truck-ramp-box"></i>
-    </div>
+    <img src="/assets/images/logo.png" alt="SIMTI Logo" style="width: 38px; height: 38px; border-radius: 12px; object-fit: contain; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);">
     <div>
       <div class="bento-brand-name">SIMTI</div>
     </div>
