@@ -7,10 +7,10 @@
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $root = dirname(__DIR__);
 
-// Default route to login.php
+// Default route to landing page index.php
 if ($uri === '/' || $uri === '' || $uri === '/index.php' || $uri === '/api' || $uri === '/api/index.php') {
     chdir($root);
-    require $root . '/login.php';
+    require $root . '/index.php';
     exit;
 }
 

@@ -8,6 +8,9 @@ if (isset($_SESSION['username']) && isset($_SESSION['tipe_user'])) {
     } elseif ($_SESSION['tipe_user'] == 'Supplier') {
         header("Location: backend/suplier/index_suplier.php");
         exit();
+    } elseif ($_SESSION['tipe_user'] == 'Customer') {
+        header("Location: backend/customer/index_customer.php");
+        exit();
     }
 }
 ?>

@@ -1,158 +1,136 @@
-﻿<?php
+<?php
 require_once __DIR__ . '/../../../koneksi.php';
 session_start();
 
-// Input sanitization
+if (!isset($_SESSION['username']) || $_SESSION['tipe_user'] != 'Supplier') {
+    header("Location: /login.php");
+    exit();
+}
+
 $kd_barang = isset($_GET['kd_barang']) ? trim($_GET['kd_barang']) : '';
 $no_pembelian = isset($_GET['no_pembelian']) ? trim($_GET['no_pembelian']) : '';
-$page = filter_input(INPUT_GET, 'halaman', FILTER_VALIDATE_INT, ['options' => ['default' => 1, 'min_range' => 1]]) ?? 1;
-$per_page = 5;
-$start = ($page - 1) * $per_page;
-$pages = 1;
-$data = null;
 
-// Fetch user type
-$tipe_user = 'Guest';
-if (isset($_SESSION['user_id'])) {
-    $user_id = (int)$_SESSION['user_id'];
-    try {
-        $res_user = pg_query($conn, "SELECT tipe_user FROM \"user\" WHERE id = '$user_id'");
-        if ($res_user && pg_num_rows($res_user) > 0) {
-            $tipe_user = pg_fetch_assoc($res_user)['tipe_user'];
-        }
-    } catch (Exception $e) {
-        error_log("Error fetching user type: " . $e->getMessage());
-    }
+$where = [];
+if ($no_pembelian) {
+    $esc_no = pg_escape_string($conn, $no_pembelian);
+    $where[] = "no_pembelian = '$esc_no'";
 }
-
-// Search and pagination logic
-try {
-    if ($no_pembelian || $kd_barang) {
-        $where = [];
-        if ($no_pembelian) {
-            $esc_no = pg_escape_string($conn, $no_pembelian);
-            $where[] = "no_pembelian = '$esc_no'";
-        }
-        if ($kd_barang) {
-            $esc_kd = pg_escape_string($conn, $kd_barang);
-            $where[] = "kd_barang = '$esc_kd'";
-        }
-        $where_sql = count($where) > 0 ? "WHERE " . implode(" AND ", $where) : "";
-
-        // Count total rows for pagination
-        $count_res = pg_query($conn, "SELECT COUNT(*) as total FROM detail_pembelian $where_sql");
-        $total_rows = $count_res ? (int)(pg_fetch_assoc($count_res)['total'] ?? 0) : 0;
-        $pages = ceil($total_rows / $per_page);
-
-        // Fetch paginated data
-        $query = "SELECT * FROM detail_pembelian $where_sql LIMIT $per_page OFFSET $start";
-        $data = pg_query($conn, $query);
-    }
-} catch (Exception $e) {
-    error_log("Error executing query: " . $e->getMessage());
+if ($kd_barang) {
+    $esc_kd = pg_escape_string($conn, $kd_barang);
+    $where[] = "kd_barang = '$esc_kd'";
 }
+$where_sql = count($where) > 0 ? "WHERE " . implode(" AND ", $where) : "";
+
+$query = "SELECT * FROM detail_pembelian $where_sql ORDER BY id ASC";
+$data = pg_query($conn, $query);
 ?>
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Detail Pembelian - SIMTI</title>
-    <link rel="stylesheet" href="/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/vendors/mdi/css/materialdesignicons.min.css">
-    <link rel="stylesheet" href="/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/vendors/css/vendor.bundle.base.css">
-    <link rel="stylesheet" href="/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/css/style.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="/assets/css/clean-ui.css">
-    <link rel="stylesheet" href="/assets/css/custom.css">
+    <title>Detail Pembelian - SIMTI Supplier</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/assets/css/clean-ui.css">
 </head>
 <body>
-    <div class="container-scroller d-flex">
-        <?php include_once __DIR__ . '/../navbar.php'; ?>
-        <div class="container-fluid page-body-wrapper">
-            <div class="main-panel">
-                <div class="content-wrapper">
-                    <div class="row">
-                        <div class="col-12 grid-margin stretch-card">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h4 class="card-title">Detail Pembelian</h4>
-                                    <p class="card-description">Last updated: <?php echo date('H:i A, F d, Y'); ?></p>
-                                    <form method="GET" action="">
-                                        <div class="form-group">
-                                            <label for="kd_barang">Kode Barang</label>
-                                            <input type="text" class="form-control" id="kd_barang" name="kd_barang" value="<?php echo htmlspecialchars($kd_barang); ?>" placeholder="Masukkan Kode Barang">
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="no_pembelian">No Pembelian</label>
-                                            <input type="text" class="form-control" id="no_pembelian" name="no_pembelian" value="<?php echo htmlspecialchars($no_pembelian); ?>" placeholder="Masukkan No Pembelian">
-                                        </div>
-                                        <button type="submit" class="btn btn-primary">Cari</button>
-                                        <a href="detail_pembelian.php" class="btn btn-secondary">Reset</a>
-                                    </form>
 
-                                    <div class="table-responsive mt-4">
-                                        <table class="table table-bordered">
-                                            <thead>
-                                                <tr>
-                                                    <th>No</th>
-                                                    <th>Kode Barang</th>
-                                                    <th>Nama Barang</th>
-                                                    <th>Jumlah</th>
-                                                    <th>Harga Satuan</th>
-                                                    <th>Total Harga</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <?php if ($data && pg_num_rows($data) > 0): ?>
-                                                    <?php $no = $start + 1; while ($row = pg_fetch_assoc($data)): ?>
-                                                        <tr>
-                                                            <td><?php echo $no++; ?></td>
-                                                            <td><?php echo htmlspecialchars($row['kd_barang']); ?></td>
-                                                            <td><?php echo htmlspecialchars($row['nama_barang']); ?></td>
-                                                            <td><?php echo htmlspecialchars($row['jumlah']); ?></td>
-                                                            <td><?php echo htmlspecialchars($row['harga_satuan']); ?></td>
-                                                            <td><?php echo htmlspecialchars($row['total_harga']); ?></td>
-                                                        </tr>
-                                                    <?php endwhile; ?>
-                                                <?php else: ?>
-                                                    <tr><td colspan="6" class="text-center">Tidak ada data ditemukan.</td></tr>
-                                                <?php endif; ?>
-                                            </tbody>
-                                        </table>
-                                    </div>
+    <?php include_once __DIR__ . '/../navbar.php'; ?>
 
-                                    <?php if (($no_pembelian || $kd_barang) && $pages > 1): ?>
-                                        <nav aria-label="Page navigation">
-                                            <ul class="pagination">
-                                                <?php for ($i = 1; $i <= $pages; $i++): ?>
-                                                    <li class="page-item <?php echo ($i == $page) ? 'active' : ''; ?>">
-                                                        <a class="page-link" href="?<?php echo http_build_query(['no_pembelian' => $no_pembelian, 'kd_barang' => $kd_barang, 'halaman' => $i]); ?>"><?php echo $i; ?></a>
-                                                    </li>
-                                                <?php endfor; ?>
-                                            </ul>
-                                        </nav>
-                                    <?php endif; ?>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+    <main class="bento-container">
+        
+        <div class="bento-header-row">
+            <div style="display: flex; align-items: center; gap: 14px;">
+                <a href="transaksi_pembelian.php" class="bento-back-btn" title="Kembali ke Daftar PO">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </a>
+                <h1 class="bento-title">Detail Pembelian (PO)</h1>
+            </div>
+
+            <form method="GET" action="" style="display: flex; gap: 10px; align-items: center;">
+                <input type="text" name="no_pembelian" value="<?= htmlspecialchars($no_pembelian) ?>" placeholder="Filter No PO..." class="bento-input-control" style="width: 200px; padding: 8px 14px;">
+                <button type="submit" class="bento-btn bento-btn-lime" style="padding: 8px 16px;">
+                    <i class="fa-solid fa-magnifying-glass"></i> Filter
+                </button>
+                <?php if ($no_pembelian || $kd_barang): ?>
+                    <a href="detail_pembelian.php" class="bento-btn bento-btn-dark" style="padding: 8px 14px;">Reset</a>
+                <?php endif; ?>
+            </form>
+        </div>
+
+        <div class="bento-table-card">
+            <div class="bento-table-header">
+                <div>
+                    <h3 style="color: #ffffff; margin: 0; font-size: 1.15rem; font-weight: 700;">Rincian Item Pasokan</h3>
+                    <p style="color: var(--c-sage); margin: 4px 0 0 0; font-size: 0.8rem;">
+                        <?= $no_pembelian ? "Nomor PO: <strong>" . htmlspecialchars($no_pembelian) . "</strong>" : "Semua item rincian pasokan" ?>
+                    </p>
                 </div>
-                <?php include_once __DIR__ . '/../../../include/footer.php'; ?>
+
+                <div class="bento-filter-pill">
+                    <span class="bento-pulse-dot"></span>
+                    <span><?= ($data ? pg_num_rows($data) : 0) ?> Item</span>
+                </div>
+            </div>
+
+            <div class="bento-table-wrap">
+                <table class="bento-table">
+                    <thead>
+                        <tr>
+                            <th>No PO</th>
+                            <th>Kode Barang</th>
+                            <th>Nama Barang</th>
+                            <th>Jumlah</th>
+                            <th>Harga Satuan</th>
+                            <th>Total Tagihan</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if ($data && pg_num_rows($data) > 0): ?>
+                            <?php while ($row = pg_fetch_assoc($data)): ?>
+                                <tr>
+                                    <td>
+                                        <span style="font-family: var(--font-mono); font-weight: 700; color: var(--c-lime);">
+                                            <?= htmlspecialchars($row['no_pembelian']) ?>
+                                        </span>
+                                    </td>
+                                    <td style="font-family: var(--font-mono); color: var(--c-mint);">
+                                        <?= htmlspecialchars($row['kd_barang']) ?>
+                                    </td>
+                                    <td>
+                                        <div style="font-weight: 700; color: #ffffff;"><?= htmlspecialchars($row['nama_barang']) ?></div>
+                                    </td>
+                                    <td style="font-family: var(--font-mono); font-weight: 700; color: #ffffff;">
+                                        <?= (int)$row['jumlah'] ?> Unit
+                                    </td>
+                                    <td style="font-family: var(--font-mono); color: var(--c-mint);">
+                                        Rp <?= number_format((float)($row['harga_satuan'] ?? 0), 0, ',', '.') ?>
+                                    </td>
+                                    <td>
+                                        <div style="font-size: 1rem; font-weight: 800; color: #ffffff; font-family: var(--font-mono);">
+                                            Rp <?= number_format((float)($row['total_harga'] ?? 0), 0, ',', '.') ?>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <?php endwhile; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="6" style="text-align: center; padding: 48px 20px; color: var(--c-sage);">
+                                    Tidak ada rincian item pembelian ditemukan.
+                                </td>
+                            </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
             </div>
         </div>
-    </div>
 
-    <script src="/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/vendors/js/vendor.bundle.base.js"></script>
-    <script src="/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/js/off-canvas.js"></script>
-    <script src="/assets/Template/SpicaAdmin-Free-Bootstrap-Admin-Template-master/template/js/misc.js"></script>
-    <script src="/assets/js/custom.js"></script>
+    </main>
+
+    <?php include_once __DIR__ . '/../../../include/footer.php'; ?>
+
 </body>
 </html>
-
-<?php
-if (isset($data) && $data) {
-    pg_free_result($data);
-}
-pg_close($conn);
-?>
