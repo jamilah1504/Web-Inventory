@@ -1,674 +1,839 @@
-<!DOCTYPE html>
-<html lang="en">
+<?php
+/**
+ * SIMTI - Modern Warehouse & Inventory Intelligence
+ * Bespoke Bento UI Landing Page (Forest Dark & Pale Mint Palette)
+ * Aligned with Image 1 (Bento UI) & Image 2 (Color Palette #051F20, #0B2B26, #163832, #235347, #8EB69B, #DAF1DE, #a3e635)
+ */
 
+include_once __DIR__ . '/koneksi.php';
+
+// Inisialisasi statistik default dengan graceful fallbacks
+$total_barang     = 0;
+$total_nilai_aset = 0;
+$total_supplier   = 0;
+$total_customer   = 0;
+$total_pembelian  = 0;
+$total_penjualan  = 0;
+$recent_items     = [];
+$db_connected     = false;
+
+if (isset($conn) && $conn) {
+    $db_connected = true;
+
+    // 1. Total Barang & Nilai Aset
+    $res_b = @pg_query($conn, "SELECT COUNT(*), COALESCE(SUM(stok * harga_beli), 0) FROM tb_barang");
+    if ($res_b && $row = pg_fetch_row($res_b)) {
+        $total_barang     = (int)$row[0];
+        $total_nilai_aset = (float)$row[1];
+    }
+
+    // 2. Total Supplier
+    $res_s = @pg_query($conn, "SELECT COUNT(*) FROM tb_supplier");
+    if ($res_s && $row = pg_fetch_row($res_s)) {
+        $total_supplier = (int)$row[0];
+    }
+
+    // 3. Total Customer
+    $res_c = @pg_query($conn, "SELECT COUNT(*) FROM tb_customer");
+    if ($res_c && $row = pg_fetch_row($res_c)) {
+        $total_customer = (int)$row[0];
+    }
+
+    // 4. Total Transaksi (Pembelian & Penjualan)
+    $res_pem = @pg_query($conn, "SELECT COUNT(*) FROM tb_pembelian");
+    if ($res_pem && $row = pg_fetch_row($res_pem)) {
+        $total_pembelian = (int)$row[0];
+    }
+    $res_pen = @pg_query($conn, "SELECT COUNT(*) FROM tb_penjualan");
+    if ($res_pen && $row = pg_fetch_row($res_pen)) {
+        $total_penjualan = (int)$row[0];
+    }
+
+    // 5. Item barang untuk showcase Bento Card
+    $res_items = @pg_query($conn, "SELECT b.kd_barang, b.nama_barang, COALESCE(k.nama_kategori, b.kode_jenis, 'Umum') as kategori, b.stok, b.harga_jual FROM tb_barang b LEFT JOIN kategori_barang k ON b.kode_jenis = k.id_kategori ORDER BY b.kd_barang DESC LIMIT 5");
+    if ($res_items) {
+        while ($r = pg_fetch_assoc($res_items)) {
+            $recent_items[] = $r;
+        }
+    }
+}
+
+// Fallback data representatif jika database kosong atau belum terisi
+if (empty($recent_items)) {
+    $recent_items = [
+        ['kd_barang' => 'BRG-001', 'nama_barang' => 'Keyboard Mekanikal RGB', 'kategori' => 'Elektronik', 'stok' => 25, 'harga_jual' => 450000],
+        ['kd_barang' => 'BRG-002', 'nama_barang' => 'Mouse Wireless Silent', 'kategori' => 'Elektronik', 'stok' => 40, 'harga_jual' => 165000],
+        ['kd_barang' => 'BRG-003', 'nama_barang' => 'Kertas HVS A4 80gr (Rim)', 'kategori' => 'Alat Tulis Kantor', 'stok' => 100, 'harga_jual' => 58000],
+    ];
+}
+$total_transaksi = $total_pembelian + $total_penjualan;
+?>
+<!DOCTYPE html>
+<html lang="id">
 <head>
   <meta charset="utf-8">
-  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIMTI - Modern Warehouse & Inventory Intelligence</title>
+  <meta name="description" content="Sistem Informasi Inventory & Gudang Cerdas Berbasis Cloud PostgreSQL & Supabase dengan Arsitektur Bento UI Modern.">
+  <meta name="theme-color" content="#051F20">
 
-  <title>Inventory Gudang</title>
-  <meta content="" name="description">
-  <meta content="" name="keywords">
+  <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <!-- Favicons -->
-  <link href="assets/Template/Bootslander/assets/img/favicon.png" rel="icon">
-  <link href="assets/Template/Bootslander/assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+  <!-- Font Awesome 6 Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Montserrat:300,300i,400,400i,500,500i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+  <!-- Clean UI Bento Design System -->
+  <link rel="stylesheet" href="assets/css/clean-ui.css">
 
-  <!-- Vendor CSS Files -->
-  <link href="assets/Template/Bootslander/assets/vendor/aos/aos.css" rel="stylesheet">
-  <link href="assets/Template/Bootslander/assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-  <link href="assets/Template/Bootslander/assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
-  <link href="assets/Template/Bootslander/assets/vendor/boxicons/css/boxicons.min.css" rel="stylesheet">
-  <link href="assets/Template/Bootslander/assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
-  <link href="assets/Template/Bootslander/assets/vendor/remixicon/remixicon.css" rel="stylesheet">
-  <link href="assets/Template/Bootslander/assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
-
-  <!-- Template Main CSS File -->
-  <link href="assets/css/style.css" rel="stylesheet">
-
-  <!-- =======================================================
-  * Template Name: Bootslander
-  * Template URL: https://bootstrapmade.com/bootslander-free-bootstrap-landing-page-template/
-  * Updated: Mar 17 2024 with Bootstrap v5.3.3
-  * Author: BootstrapMade.com
-  * License: https://bootstrapmade.com/license/
-  ======================================================== -->
+  <style>
+    html {
+      scroll-behavior: smooth;
+    }
+    body {
+      background-color: var(--c-forest-900) !important;
+      color: var(--c-sage) !important;
+      overflow-x: hidden;
+    }
+  </style>
 </head>
-
 <body>
 
-  <!-- ======= Header ======= -->
-  <header id="header" class="fixed-top d-flex align-items-center header-transparent">
-    <div class="container d-flex align-items-center justify-content-between">
+  <!-- ========================================================
+       TOP FLOATING CAPSULE NAVIGATION (Image 1 Style)
+       ======================================================== -->
+  <header class="landing-nav">
+    <div class="landing-nav-inner">
+      <a href="index.php" class="landing-brand">
+        <div class="landing-brand-icon">
+          <i class="fas fa-boxes-stacked"></i>
+        </div>
+        <div class="landing-brand-text">
+          <span>SIMTI</span>
+          <span class="landing-brand-sub">Inventory Cloud</span>
+        </div>
+      </a>
 
-      <div class="logo">
-        <h1><a href="index.html"><span>Inventory Gudang Barang</spn></a></h1>
-        <!-- Uncomment below if you prefer to use an image logo -->
-        <!-- <a href="index.html"><img src="assets/Template/Bootslander/assets/img/logo.png" alt="" class="img-fluid"></a>-->
-      </div>
-      <?php
-      include 'navbar.php';
-      ?>
+      <?php include 'navbar.php'; ?>
     </div>
-  </header><!-- End Header -->
+  </header>
 
-  <!-- ======= Hero Section ======= -->
-  <section id="hero">
+  <!-- ========================================================
+       HERO SECTION: High-Impact Editorial Heading & CTAs
+       ======================================================== -->
+  <section class="landing-hero" id="hero">
+    <div class="landing-hero-container">
+      
+      <!-- Live Status Badge -->
+      <div class="hero-pill-badge">
+        <span class="bento-pulse-dot"></span>
+        <span>Supabase PostgreSQL Engine &bull; Cloud Sync Active</span>
+      </div>
 
-    <div class="container">
-      <div class="row justify-content-between">
-        <div class="col-lg-7 pt-5 pt-lg-0 order-2 order-lg-1 d-flex align-items-center">
-          <div data-aos="zoom-out">
-            <h1>Sistem informasi 
-              <br><span> Inventory Gudang Barang</span><br>
-            </h1>
-            <h2>Manajemen Stok Keluar Masuk Barang Menjadi Mudah dan Efisien</h2>
-            <div class="text-center text-lg-start">
-              <a href="login.php" class="btn-get-started scrollto">Get Started</a>
+      <!-- Main Headline -->
+      <h1 class="hero-title">
+        Modern Warehouse &amp; <span>Inventory Intelligence</span>
+      </h1>
+
+      <!-- Subheadline -->
+      <p class="hero-subtitle">
+        Platform manajemen inventaris real-time terintegrasi Supabase PostgreSQL. 
+        Pantau mutasi stok masuk dan keluar, kendalikan batas stok minimum otomatis, 
+        serta sajikan audit transaksi transparan dengan ketepatan presisi tinggi.
+      </p>
+
+      <!-- Dual Call To Actions -->
+      <div class="hero-cta-group">
+        <a href="login.php" class="hero-btn-primary">
+          <span>Buka Portal Sistem</span>
+          <i class="fas fa-arrow-right"></i>
+        </a>
+        <a href="#showcase" class="hero-btn-secondary">
+          <i class="fas fa-layer-group"></i>
+          <span>Eksplor Live Bento</span>
+        </a>
+      </div>
+
+      <!-- Tech Feature Pills -->
+      <div style="display: flex; justify-content: center; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 30px;">
+        <span style="font-size: 0.775rem; color: var(--c-sage); font-weight: 600; padding: 5px 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-glass); border-radius: var(--radius-pill);">
+          <i class="fas fa-database" style="color: var(--c-lime); margin-right: 6px;"></i> PostgreSQL 15+
+        </span>
+        <span style="font-size: 0.775rem; color: var(--c-sage); font-weight: 600; padding: 5px 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-glass); border-radius: var(--radius-pill);">
+          <i class="fas fa-cloud" style="color: var(--c-lime); margin-right: 6px;"></i> Supabase Pooler
+        </span>
+        <span style="font-size: 0.775rem; color: var(--c-sage); font-weight: 600; padding: 5px 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-glass); border-radius: var(--radius-pill);">
+          <i class="fas fa-server" style="color: var(--c-lime); margin-right: 6px;"></i> Vercel Serverless Ready
+        </span>
+        <span style="font-size: 0.775rem; color: var(--c-sage); font-weight: 600; padding: 5px 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-glass); border-radius: var(--radius-pill);">
+          <i class="fas fa-shield-halved" style="color: var(--c-lime); margin-right: 6px;"></i> Role-Based RBAC
+        </span>
+      </div>
+
+      <!-- ========================================================
+           INTERACTIVE BENTO SHOWCASE (Faithfully Modeled from Image 1)
+           ======================================================== -->
+      <div class="hero-mockup-wrapper" id="showcase">
+        <div class="hero-device-frame">
+          
+          <!-- Mockup Topbar Capsule -->
+          <div class="mockup-topbar">
+            <div class="mockup-brand">
+              <i class="fas fa-asterisk" style="color: var(--c-lime); font-size: 16px;"></i>
+              <span style="font-weight: 800; color: #ffffff; font-size: 1.05rem; letter-spacing: -0.02em;">Gudang Pusat Jakarta</span>
             </div>
-          </div>
-        </div>
-        <div class="col-lg-4 order-1 order-lg-2 hero-img" data-aos="zoom-out" data-aos-delay="300">
-          <img src="assets/Template/Bootslander/assets/img/hero-img.png" class="img-fluid animated" alt="">
-        </div>
-      </div>
-    </div>
 
-    <svg class="hero-waves" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 24 150 28 " preserveAspectRatio="none">
-      <defs>
-        <path id="wave-path" d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z">
-      </defs>
-      <g class="wave1">
-        <use xlink:href="#wave-path" x="50" y="3" fill="rgba(255,255,255, .1)">
-      </g>
-      <g class="wave2">
-        <use xlink:href="#wave-path" x="50" y="0" fill="rgba(255,255,255, .2)">
-      </g>
-      <g class="wave3">
-        <use xlink:href="#wave-path" x="50" y="9" fill="#fff">
-      </g>
-    </svg>
+            <!-- Segmented Pill Filter Bar (from top of Image 1) -->
+            <div class="mockup-capsule-tabs">
+              <span class="mockup-tab active"><i class="fas fa-check-circle" style="margin-right: 4px;"></i> Semua Stok</span>
+              <span class="mockup-tab">Barang Masuk</span>
+              <span class="mockup-tab">Barang Keluar</span>
+              <span class="mockup-tab">Supplier</span>
+              <span class="mockup-tab">Live Sync</span>
+            </div>
 
-  </section><!-- End Hero -->
-
-  <main id="main">
-
-<!-- ======= Tentang Sistem ======= -->
-<section id="about" class="about">
-  <div class="container-fluid">
-
-    <div class="row">
-
-      <div class="col-xl-7 col-lg-6 icon-boxes d-flex flex-column align-items-stretch justify-content-center py-5 px-lg-5" data-aos="fade-left">
-        <h3>Sistem Inventory Barang yang Efisien dan Terintegrasi</h3>
-        <p>Sistem ini membantu Anda dalam mengelola stok barang, mencatat pemasukan dan pengeluaran barang, serta menyajikan laporan secara otomatis dan akurat. Cocok untuk berbagai jenis usaha dan instansi.</p>
-
-        <div class="icon-box" data-aos="zoom-in" data-aos-delay="100">
-          <div class="icon"><i class="bx bx-package"></i></div>
-          <h4 class="title"><a href="#">Manajemen Stok</a></h4>
-          <p class="description">Pantau jumlah barang secara real-time, deteksi stok habis, dan kelola kategori dengan mudah.</p>
-        </div>
-
-        <div class="icon-box" data-aos="zoom-in" data-aos-delay="200">
-          <div class="icon"><i class="bx bx-transfer-alt"></i></div>
-          <h4 class="title"><a href="#">Riwayat Transaksi</a></h4>
-          <p class="description">Catat semua transaksi masuk dan keluar barang dengan laporan yang rapi dan mudah ditelusuri.</p>
-        </div>
-
-        <div class="icon-box" data-aos="zoom-in" data-aos-delay="300">
-          <div class="icon"><i class="bx bx-bar-chart-alt"></i></div>
-          <h4 class="title"><a href="#">Laporan & Analisis</a></h4>
-          <p class="description">Dapatkan laporan otomatis dan grafik analisis untuk membantu pengambilan keputusan yang lebih baik.</p>
-        </div>
-
-      </div>
-    </div>
-
-  </div>
-</section><!-- End About Section -->
-
-
-<!-- ======= Fitur Sistem Inventory ======= -->
-<section id="features" class="features">
-  <div class="container">
-
-    <div class="section-title" data-aos="fade-up">
-      <h2>Fitur Utama</h2>
-      <p>Kenali Fitur-Fitur Unggulan Kami</p>
-    </div>
-
-    <div class="row" data-aos="fade-left">
-      <div class="col-lg-3 col-md-4">
-        <div class="icon-box" data-aos="zoom-in" data-aos-delay="50">
-          <i class="ri-store-line" style="color: #ffbb2c;"></i>
-          <h3><a href="#">Manajemen Stok</a></h3>
-        </div>
-      </div>
-      <div class="col-lg-3 col-md-4 mt-4 mt-md-0">
-        <div class="icon-box" data-aos="zoom-in" data-aos-delay="100">
-          <i class="ri-bar-chart-box-line" style="color: #5578ff;"></i>
-          <h3><a href="#">Laporan Otomatis</a></h3>
-        </div>
-      </div>
-      <div class="col-lg-3 col-md-4 mt-4 mt-md-0">
-        <div class="icon-box" data-aos="zoom-in" data-aos-delay="150">
-          <i class="ri-calendar-todo-line" style="color: #e80368;"></i>
-          <h3><a href="#">Riwayat Transaksi</a></h3>
-        </div>
-      </div>
-      <div class="col-lg-3 col-md-4 mt-4 mt-lg-0">
-        <div class="icon-box" data-aos="zoom-in" data-aos-delay="200">
-          <i class="ri-paint-brush-line" style="color: #e361ff;"></i>
-          <h3><a href="#">Antarmuka Intuitif</a></h3>
-        </div>
-      </div>
-      <div class="col-lg-3 col-md-4 mt-4">
-        <div class="icon-box" data-aos="zoom-in" data-aos-delay="250">
-          <i class="ri-database-2-line" style="color: #47aeff;"></i>
-          <h3><a href="#">Database Terstruktur</a></h3>
-        </div>
-      </div>
-      <div class="col-lg-3 col-md-4 mt-4">
-        <div class="icon-box" data-aos="zoom-in" data-aos-delay="300">
-          <i class="ri-gradienter-line" style="color: #ffa76e;"></i>
-          <h3><a href="#">Kategori Barang</a></h3>
-        </div>
-      </div>
-      <div class="col-lg-3 col-md-4 mt-4">
-        <div class="icon-box" data-aos="zoom-in" data-aos-delay="350">
-          <i class="ri-file-list-3-line" style="color: #11dbcf;"></i>
-          <h3><a href="#">Pencatatan Detail</a></h3>
-        </div>
-      </div>
-      <div class="col-lg-3 col-md-4 mt-4">
-        <div class="icon-box" data-aos="zoom-in" data-aos-delay="400">
-          <i class="ri-price-tag-2-line" style="color: #4233ff;"></i>
-          <h3><a href="#">Lacak Harga Barang</a></h3>
-        </div>
-      </div>
-      <div class="col-lg-3 col-md-4 mt-4">
-        <div class="icon-box" data-aos="zoom-in" data-aos-delay="450">
-          <i class="ri-anchor-line" style="color: #b2904f;"></i>
-          <h3><a href="#">Pengingat Stok Minimum</a></h3>
-        </div>
-      </div>
-      <div class="col-lg-3 col-md-4 mt-4">
-        <div class="icon-box" data-aos="zoom-in" data-aos-delay="500">
-          <i class="ri-disc-line" style="color: #b20969;"></i>
-          <h3><a href="#">Backup Otomatis</a></h3>
-        </div>
-      </div>
-      <div class="col-lg-3 col-md-4 mt-4">
-        <div class="icon-box" data-aos="zoom-in" data-aos-delay="550">
-          <i class="ri-base-station-line" style="color: #ff5828;"></i>
-          <h3><a href="#">Integrasi Multi-Cabang</a></h3>
-        </div>
-      </div>
-      <div class="col-lg-3 col-md-4 mt-4">
-        <div class="icon-box" data-aos="zoom-in" data-aos-delay="600">
-          <i class="ri-fingerprint-line" style="color: #29cc61;"></i>
-          <h3><a href="#">Akses Role-Based</a></h3>
-        </div>
-      </div>
-    </div>
-
-  </div>
-</section><!-- End Features Section -->
-
-
-    <!-- ======= Counts Section ======= -->
-    <!-- <section id="counts" class="counts">
-      <div class="container">
-
-        <div class="row" data-aos="fade-up">
-
-          <div class="col-lg-3 col-md-6">
-            <div class="count-box">
-              <i class="bi bi-emoji-smile"></i>
-              <span data-purecounter-start="0" data-purecounter-end="232" data-purecounter-duration="1" class="purecounter"></span>
-              <p>Happy Clients</p>
+            <!-- User status pill -->
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 0.75rem; color: var(--c-mint); font-weight: 700; background: rgba(163, 230, 53, 0.15); border: 1px solid rgba(163, 230, 53, 0.3); padding: 4px 10px; border-radius: var(--radius-pill);">
+                <i class="fas fa-circle" style="color: var(--c-lime); font-size: 7px; margin-right: 4px;"></i> Live Portal
+              </span>
             </div>
           </div>
 
-          <div class="col-lg-3 col-md-6 mt-5 mt-md-0">
-            <div class="count-box">
-              <i class="bi bi-journal-richtext"></i>
-              <span data-purecounter-start="0" data-purecounter-end="521" data-purecounter-duration="1" class="purecounter"></span>
-              <p>Projects</p>
-            </div>
-          </div>
-
-          <div class="col-lg-3 col-md-6 mt-5 mt-lg-0">
-            <div class="count-box">
-              <i class="bi bi-headset"></i>
-              <span data-purecounter-start="0" data-purecounter-end="1463" data-purecounter-duration="1" class="purecounter"></span>
-              <p>Hours Of Support</p>
-            </div>
-          </div>
-
-          <div class="col-lg-3 col-md-6 mt-5 mt-lg-0">
-            <div class="count-box">
-              <i class="bi bi-people"></i>
-              <span data-purecounter-start="0" data-purecounter-end="15" data-purecounter-duration="1" class="purecounter"></span>
-              <p>Hard Workers</p>
-            </div>
-          </div>
-
-        </div>
-
-      </div>
-    </section>End Counts Section -->
-
-<!-- ======= Inventory Details Section ======= -->
-<section id="details" class="details">
-  <div class="container">
-
-    <div class="row content">
-      <div class="col-md-4" data-aos="fade-right">
-        <img src="assets/Template/Bootslander/assets/img/details-1.png" class="img-fluid" alt="Inventory Overview">
-      </div>
-      <div class="col-md-8 pt-4" data-aos="fade-up">
-        <h3>Kelola stok barang dengan efisien dan akurat</h3>
-        <p class="fst-italic">
-          Sistem inventaris kami mempermudah pencatatan, pelacakan, dan pengelolaan barang secara real-time.
-        </p>
-        <ul>
-          <li><i class="bi bi-check"></i> Pemantauan stok otomatis setiap kali ada transaksi keluar/masuk.</li>
-          <li><i class="bi bi-check"></i> Kategorisasi produk untuk memudahkan pencarian dan penyusunan laporan.</li>
-          <li><i class="bi bi-check"></i> Peringatan stok minimum agar tidak kehabisan barang penting.</li>
-          <li><i class="bi bi-check"></i> Laporan inventaris harian, mingguan, dan bulanan yang lengkap.</li>
-        </ul>
-        <p>
-          Dengan sistem ini, risiko kehilangan barang dan kesalahan pencatatan dapat diminimalisir secara signifikan.
-        </p>
-      </div>
-    </div>
-
-    <div class="row content">
-      <div class="col-md-4 order-1 order-md-2" data-aos="fade-left">
-        <img src="assets/Template/Bootslander/assets/img/details-2.png" class="img-fluid" alt="Inventory Monitoring">
-      </div>
-      <div class="col-md-8 pt-5 order-2 order-md-1" data-aos="fade-up">
-        <h3>Pelacakan barang secara menyeluruh</h3>
-        <p class="fst-italic">
-          Lacak pergerakan barang mulai dari gudang hingga sampai ke pengguna akhir dengan mudah.
-        </p>
-        <p>
-          Setiap perubahan status barang akan otomatis tercatat dalam sistem, lengkap dengan waktu dan keterangan pengguna yang melakukan transaksi.
-        </p>
-        <p>
-          Hal ini membantu meningkatkan transparansi dan akuntabilitas dalam pengelolaan barang.
-        </p>
-      </div>
-    </div>
-
-    <div class="row content">
-      <div class="col-md-4" data-aos="fade-right">
-        <img src="assets/Template/Bootslander/assets/img/details-3.png" class="img-fluid" alt="Inventory Reports">
-      </div>
-      <div class="col-md-8 pt-5" data-aos="fade-up">
-        <h3>Laporan lengkap dan mudah dipahami</h3>
-        <p>Dapatkan berbagai jenis laporan inventaris secara instan dan dalam berbagai format.</p>
-        <ul>
-          <li><i class="bi bi-check"></i> Laporan transaksi masuk dan keluar barang.</li>
-          <li><i class="bi bi-check"></i> Ringkasan stok berdasarkan kategori atau lokasi penyimpanan.</li>
-          <li><i class="bi bi-check"></i> Laporan pengeluaran dan nilai barang secara berkala.</li>
-        </ul>
-        <p>
-          Laporan ini dapat digunakan sebagai dasar pengambilan keputusan dan untuk keperluan audit internal.
-        </p>
-        <p>
-          Semua laporan bisa diunduh dalam format PDF atau Excel sesuai kebutuhan pengguna.
-        </p>
-      </div>
-    </div>
-
-    <div class="row content">
-      <div class="col-md-4 order-1 order-md-2" data-aos="fade-left">
-        <img src="assets/Template/Bootslander/assets/img/details-4.png" class="img-fluid" alt="Inventory Access Control">
-      </div>
-      <div class="col-md-8 pt-5 order-2 order-md-1" data-aos="fade-up">
-        <h3>Hak akses pengguna yang fleksibel dan aman</h3>
-        <p class="fst-italic">
-          Kelola siapa saja yang dapat melihat atau mengelola inventaris berdasarkan peran pengguna.
-        </p>
-        <p>
-          Fitur manajemen pengguna memungkinkan pembatasan akses berdasarkan tanggung jawab masing-masing, sehingga keamanan data lebih terjamin.
-        </p>
-        <ul>
-          <li><i class="bi bi-check"></i> Admin dapat mengatur peran pengguna dengan granular.</li>
-          <li><i class="bi bi-check"></i> Setiap pengguna memiliki dashboard khusus sesuai peran dan hak aksesnya.</li>
-          <li><i class="bi bi-check"></i> Riwayat aktivitas pengguna tercatat otomatis untuk kebutuhan audit.</li>
-        </ul>
-      </div>
-    </div>
-
-  </div>
-</section><!-- End Inventory Details Section -->
-
-    <!-- ======= Pricing Section ======= -->
-    <section id="pricing" class="pricing">
-      <div class="container">
-
-        <div class="section-title" data-aos="fade-up">
-          <h2>Pricing</h2>
-          <p>Check our Pricing</p>
-        </div>
-
-        <div class="row" data-aos="fade-left">
-
-          <div class="col-lg-3 col-md-6">
-            <div class="box" data-aos="zoom-in" data-aos-delay="100">
-              <h3>Free</h3>
-              <h4><sup>$</sup>0<span> / month</span></h4>
-              <ul>
-                <li>Aida dere</li>
-                <li>Nec feugiat nisl</li>
-                <li>Nulla at volutpat dola</li>
-                <li class="na">Pharetra massa</li>
-                <li class="na">Massa ultricies mi</li>
-              </ul>
-              <div class="btn-wrap">
-                <a href="#" class="btn-buy">Buy Now</a>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-lg-3 col-md-6 mt-4 mt-md-0">
-            <div class="box featured" data-aos="zoom-in" data-aos-delay="200">
-              <h3>Business</h3>
-              <h4><sup>$</sup>19<span> / month</span></h4>
-              <ul>
-                <li>Aida dere</li>
-                <li>Nec feugiat nisl</li>
-                <li>Nulla at volutpat dola</li>
-                <li>Pharetra massa</li>
-                <li class="na">Massa ultricies mi</li>
-              </ul>
-              <div class="btn-wrap">
-                <a href="#" class="btn-buy">Buy Now</a>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-lg-3 col-md-6 mt-4 mt-lg-0">
-            <div class="box" data-aos="zoom-in" data-aos-delay="300">
-              <h3>Developer</h3>
-              <h4><sup>$</sup>29<span> / month</span></h4>
-              <ul>
-                <li>Aida dere</li>
-                <li>Nec feugiat nisl</li>
-                <li>Nulla at volutpat dola</li>
-                <li>Pharetra massa</li>
-                <li>Massa ultricies mi</li>
-              </ul>
-              <div class="btn-wrap">
-                <a href="#" class="btn-buy">Buy Now</a>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-lg-3 col-md-6 mt-4 mt-lg-0">
-            <div class="box" data-aos="zoom-in" data-aos-delay="400">
-              <span class="advanced">Advanced</span>
-              <h3>Ultimate</h3>
-              <h4><sup>$</sup>49<span> / month</span></h4>
-              <ul>
-                <li>Aida dere</li>
-                <li>Nec feugiat nisl</li>
-                <li>Nulla at volutpat dola</li>
-                <li>Pharetra massa</li>
-                <li>Massa ultricies mi</li>
-              </ul>
-              <div class="btn-wrap">
-                <a href="#" class="btn-buy">Buy Now</a>
-              </div>
-            </div>
-          </div>
-
-        </div>
-
-      </div>
-    </section><!-- End Pricing Section -->
-
-<!-- ======= F.A.Q Section ======= -->
-<section id="faq" class="faq section-bg">
-  <div class="container">
-
-    <div class="section-title" data-aos="fade-up">
-      <h2>F.A.Q</h2>
-      <p>Pertanyaan Umum Seputar Sistem Inventory</p>
-    </div>
-
-    <div class="faq-list">
-      <ul>
-        <li data-aos="fade-up">
-          <i class="bx bx-help-circle icon-help"></i> 
-          <a data-bs-toggle="collapse" class="collapse" data-bs-target="#faq-list-1">
-            Apakah sistem ini bisa digunakan untuk banyak gudang? 
-            <i class="bx bx-chevron-down icon-show"></i><i class="bx bx-chevron-up icon-close"></i>
-          </a>
-          <div id="faq-list-1" class="collapse show" data-bs-parent=".faq-list">
-            <p>
-              Ya, sistem mendukung multi-gudang. Anda bisa mengelola beberapa lokasi penyimpanan sekaligus dan memantau pergerakan stok di masing-masing gudang secara terpisah.
-            </p>
-          </div>
-        </li>
-
-        <li data-aos="fade-up" data-aos-delay="100">
-          <i class="bx bx-help-circle icon-help"></i> 
-          <a data-bs-toggle="collapse" data-bs-target="#faq-list-2" class="collapsed">
-            Apakah bisa menambahkan kategori atau jenis barang sendiri?
-            <i class="bx bx-chevron-down icon-show"></i><i class="bx bx-chevron-up icon-close"></i>
-          </a>
-          <div id="faq-list-2" class="collapse" data-bs-parent=".faq-list">
-            <p>
-              Bisa. Anda dapat menambahkan, mengedit, atau menghapus kategori barang sesuai kebutuhan. Hal ini mempermudah pengelompokan dan pelacakan stok.
-            </p>
-          </div>
-        </li>
-
-        <li data-aos="fade-up" data-aos-delay="200">
-          <i class="bx bx-help-circle icon-help"></i> 
-          <a data-bs-toggle="collapse" data-bs-target="#faq-list-3" class="collapsed">
-            Apakah ada fitur laporan otomatis?
-            <i class="bx bx-chevron-down icon-show"></i><i class="bx bx-chevron-up icon-close"></i>
-          </a>
-          <div id="faq-list-3" class="collapse" data-bs-parent=".faq-list">
-            <p>
-              Ya. Sistem menyediakan laporan otomatis harian, mingguan, atau bulanan yang bisa dikirimkan langsung ke email pengguna atau diunduh dari dashboard.
-            </p>
-          </div>
-        </li>
-
-        <li data-aos="fade-up" data-aos-delay="300">
-          <i class="bx bx-help-circle icon-help"></i> 
-          <a data-bs-toggle="collapse" data-bs-target="#faq-list-4" class="collapsed">
-            Bagaimana jika koneksi internet terputus?
-            <i class="bx bx-chevron-down icon-show"></i><i class="bx bx-chevron-up icon-close"></i>
-          </a>
-          <div id="faq-list-4" class="collapse" data-bs-parent=".faq-list">
-            <p>
-              Sistem berbasis cloud, namun versi offline juga tersedia untuk pencatatan sementara. Data akan disinkronkan kembali saat koneksi aktif.
-            </p>
-          </div>
-        </li>
-
-        <li data-aos="fade-up" data-aos-delay="400">
-          <i class="bx bx-help-circle icon-help"></i> 
-          <a data-bs-toggle="collapse" data-bs-target="#faq-list-5" class="collapsed">
-            Apakah data bisa diimpor dari Excel?
-            <i class="bx bx-chevron-down icon-show"></i><i class="bx bx-chevron-up icon-close"></i>
-          </a>
-          <div id="faq-list-5" class="collapse" data-bs-parent=".faq-list">
-            <p>
-              Tentu. Anda bisa mengimpor data barang dari file Excel untuk memudahkan migrasi awal atau pembaruan data massal.
-            </p>
-          </div>
-        </li>
-      </ul>
-    </div>
-
-  </div>
-</section><!-- End F.A.Q Section -->
-
-
-    <!-- ======= Contact Section ======= -->
-    <section id="contact" class="contact">
-      <div class="container">
-
-        <div class="section-title" data-aos="fade-up">
-          <h2>Contact</h2>
-          <p>Contact Us</p>
-        </div>
-
-        <div class="row">
-
-          <div class="col-lg-4" data-aos="fade-right" data-aos-delay="100">
-            <div class="info">
-              <div class="address">
-                <i class="bi bi-geo-alt"></i>
-                <h4>Lokasi:</h4>
-                <p>Jawa Barat, Indonesia</p>
-              </div>
-
-              <div class="email">
-                <i class="bi bi-envelope"></i>
-                <h4>Email:</h4>
-                <p>info@example.com</p>
-              </div>
-
-              <div class="phone">
-                <i class="bi bi-phone"></i>
-                <h4>Call:</h4>
-                <p>+62800000000</p>
-              </div>
-
-            </div>
-
-          </div>
-
-          <div class="col-lg-8 mt-5 mt-lg-0" data-aos="fade-left" data-aos-delay="200">
-
-            <form action="forms/contact.php" method="post" role="form" class="php-email-form">
-              <div class="row">
-                <div class="col-md-6 form-group">
-                  <input type="text" name="name" class="form-control" id="name" placeholder="Your Name" required>
+          <!-- Bento Top Metrics Grid (from Image 1) -->
+          <div class="bento-grid-metrics" style="margin-bottom: 22px;">
+            <!-- Subgrid 3 Cards -->
+            <div class="bento-subgrid-metrics">
+              
+              <!-- Metric 1: Total SKU -->
+              <div class="bento-card">
+                <div class="bento-card-label">Master SKU Barang</div>
+                <div class="bento-card-value"><?= number_format($total_barang) ?> <span style="font-size: 1rem; font-weight: 600; color: var(--c-sage);">Item</span></div>
+                <div class="bento-progress-track">
+                  <div class="bento-progress-fill" style="width: 82%;"></div>
                 </div>
-                <div class="col-md-6 form-group mt-3 mt-md-0">
-                  <input type="email" class="form-control" name="email" id="email" placeholder="Your Email" required>
+                <div class="bento-card-sub" style="margin-top: 10px;">
+                  <i class="fas fa-arrow-trend-up" style="color: var(--c-lime);"></i>
+                  <span>Sinkron dengan database Supabase</span>
                 </div>
               </div>
-              <div class="form-group mt-3">
-                <input type="text" class="form-control" name="subject" id="subject" placeholder="Subject" required>
+
+              <!-- Metric 2: Total Transaksi -->
+              <div class="bento-card">
+                <div class="bento-card-label">Aktivitas Transaksi</div>
+                <div class="bento-card-value"><?= number_format($total_transaksi) ?> <span style="font-size: 1rem; font-weight: 600; color: var(--c-sage);">Log</span></div>
+                <div class="bento-progress-track">
+                  <div class="bento-progress-fill" style="width: 65%;"></div>
+                </div>
+                <div class="bento-card-sub" style="margin-top: 10px;">
+                  <i class="fas fa-clock" style="color: var(--c-mint);"></i>
+                  <span>Pembelian &amp; Penjualan terdata</span>
+                </div>
               </div>
-              <div class="form-group mt-3">
-                <textarea class="form-control" name="message" rows="5" placeholder="Message" required></textarea>
+
+              <!-- Metric 3: Rekanan Bisnis -->
+              <div class="bento-card">
+                <div class="bento-card-label">Mitra Terdaftar</div>
+                <div class="bento-card-value"><?= number_format($total_supplier + $total_customer) ?> <span style="font-size: 1rem; font-weight: 600; color: var(--c-sage);">Mitra</span></div>
+                <div class="bento-avatar-stack">
+                  <div class="bento-stack-item"><i class="fas fa-user-tie"></i></div>
+                  <div class="bento-stack-item"><i class="fas fa-building"></i></div>
+                  <div class="bento-stack-item"><i class="fas fa-truck"></i></div>
+                  <div class="bento-stack-item" style="background: var(--c-forest-700); font-size: 0.65rem;">+<?= max(1, $total_supplier) ?></div>
+                </div>
+                <div class="bento-card-sub" style="margin-top: 10px;">
+                  <span><?= $total_supplier ?> Supplier &bull; <?= $total_customer ?> Customer</span>
+                </div>
               </div>
-              <div class="my-3">
-                <div class="loading">Loading</div>
-                <div class="error-message"></div>
-                <div class="sent-message">Pesan anda telah terkirim. Terimakasih!</div>
+
+            </div>
+
+            <!-- Metric 4: Signature Electric Lime Card (Direct from Image 1 right card!) -->
+            <div class="bento-card-highlight" style="background: linear-gradient(145deg, #163832 0%, #0b2b26 100%);">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                  <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; color: var(--c-sage);">Cloud Engine</div>
+                  <div style="font-size: 1.45rem; font-weight: 800; color: #ffffff; margin-top: 4px;">Supabase AWS</div>
+                </div>
+                <span class="bento-lime-badge">
+                  <i class="fas fa-bolt"></i> Active
+                </span>
               </div>
-              <div class="text-center"><button type="submit">Kirim Pesan</button></div>
-            </form>
+
+              <div style="margin: 16px 0; display: flex; gap: 8px;">
+                <div style="flex: 1; background: var(--c-forest-700); border: 1px solid var(--border-glass); border-radius: 12px; padding: 10px;">
+                  <div style="font-size: 0.7rem; color: var(--c-sage);">Latency</div>
+                  <div style="font-size: 0.95rem; font-weight: 800; color: var(--c-lime); font-family: var(--font-mono);">28 ms</div>
+                </div>
+                <div style="flex: 1; background: var(--c-lime); border-radius: 12px; padding: 10px; color: var(--c-forest-900);">
+                  <div style="font-size: 0.7rem; font-weight: 700;">Uptime SLA</div>
+                  <div style="font-size: 0.95rem; font-weight: 800; font-family: var(--font-mono);">99.99%</div>
+                </div>
+              </div>
+
+              <a href="login.php" class="bento-btn bento-btn-white" style="width: 100%; justify-content: center; font-size: 0.825rem; padding: 8px 16px;">
+                <span>Masuk Manajemen Portal</span>
+                <i class="fas fa-arrow-right" style="font-size: 12px;"></i>
+              </a>
+            </div>
 
           </div>
 
-        </div>
+          <!-- Capsule Pill Filters (Image 1 Middle Row) -->
+          <div class="bento-filters-row">
+            <span class="bento-filter-pill active"><i class="fas fa-filter"></i> Semua Kategori</span>
+            <span class="bento-filter-pill"><i class="fas fa-microchip"></i> Elektronik</span>
+            <span class="bento-filter-pill"><i class="fas fa-pen-ruler"></i> Alat Tulis Kantor</span>
+            <span class="bento-filter-pill"><i class="fas fa-shield-halved"></i> Stok Aman</span>
+            <span class="bento-filter-pill"><i class="fas fa-triangle-exclamation"></i> Ambang Batas Minimum</span>
+          </div>
 
-      </div>
-    </section><!-- End Contact Section -->
+          <!-- ========================================================
+               THE SIGNATURE SPLIT SECTION (LIGHT CARD VS DARK CARD)
+               Centerpiece of Image 1!
+               ======================================================== -->
+          <div class="bento-split-grid">
+            
+            <!-- Left Side: High-Contrast Pale Mint / White Bento Card -->
+            <div class="bento-card-light">
+              <div class="bento-section-title">
+                <span>Katalog Barang Real-time</span>
+                <span style="font-size: 0.725rem; font-weight: 700; background: var(--c-forest-900); color: var(--c-mint); padding: 4px 10px; border-radius: var(--radius-pill); font-family: var(--font-mono);">
+                  <?= count($recent_items) ?> Terekam
+                </span>
+              </div>
 
-  </main><!-- End #main -->
-
-  <!-- ======= Footer ======= -->
-  <footer id="footer">
-    <div class="footer-top">
-      <div class="container">
-        <div class="row">
-
-          <div class="col-lg-4 col-md-6">
-            <div class="footer-info">
-              <h3>Inventory Gudang</h3>
-              <p class="pb-3"><em>Manajemen Stok Keluar Masuk Barang Menjadi Mudah dan Efisien.</em></p>
-              <p>
-                Jawa Barat <br>
-                Indonesia<br><br>
-                <strong>Phone:</strong> +628000000000<br>
-                <strong>Email:</strong> info@example.com<br>
-              </p>
-              <div class="social-links mt-3">
-                <a href="#" class="twitter"><i class="bx bxl-twitter"></i></a>
-                <a href="#" class="facebook"><i class="bx bxl-facebook"></i></a>
-                <a href="#" class="instagram"><i class="bx bxl-instagram"></i></a>
-                <a href="#" class="google-plus"><i class="bx bxl-skype"></i></a>
-                <a href="#" class="linkedin"><i class="bx bxl-linkedin"></i></a>
+              <div class="bento-light-list">
+                <?php foreach ($recent_items as $item): ?>
+                  <div class="bento-light-item">
+                    <div class="bento-light-item-left">
+                      <div class="bento-light-avatar">
+                        <i class="fas fa-box"></i>
+                      </div>
+                      <div>
+                        <div class="bento-light-name"><?= htmlspecialchars($item['nama_barang']) ?></div>
+                        <div class="bento-light-meta"><?= htmlspecialchars($item['kd_barang']) ?> &bull; <?= htmlspecialchars($item['kategori']) ?></div>
+                      </div>
+                    </div>
+                    <div style="text-align: right;">
+                      <div class="bento-light-price">Rp <?= number_format((float)$item['harga_jual'], 0, ',', '.') ?></div>
+                      <span class="bento-status-pill <?= ((int)$item['stok'] <= 10) ? 'bento-status-low' : 'bento-status-safe' ?>" style="font-size: 0.7rem; padding: 2px 8px;">
+                        Stok: <?= (int)$item['stok'] ?>
+                      </span>
+                    </div>
+                  </div>
+                <?php endforeach; ?>
               </div>
             </div>
-          </div>
 
-          <div class="col-lg-2 col-md-6 footer-links">
-            <h4>Useful Links</h4>
-            <ul>
-              <li><i class="bx bx-chevron-right"></i> <a href="#">Home</a></li>
-              <li><i class="bx bx-chevron-right"></i> <a href="#">About us</a></li>
-              <li><i class="bx bx-chevron-right"></i> <a href="#">Services</a></li>
-              <li><i class="bx bx-chevron-right"></i> <a href="#">Terms of service</a></li>
-              <li><i class="bx bx-chevron-right"></i> <a href="#">Privacy policy</a></li>
-            </ul>
-          </div>
+            <!-- Right Side: Deep Forest Dark Bento Card -->
+            <div class="bento-card-dark">
+              <div class="bento-section-title">
+                <span>Valuasi Gudang &amp; Infrastruktur</span>
+                <span style="font-size: 0.75rem; color: var(--c-lime); font-family: var(--font-mono);">
+                  <i class="fas fa-shield-check"></i> ACID Compliant
+                </span>
+              </div>
 
-          <div class="col-lg-2 col-md-6 footer-links">
-            <h4>Our Services</h4>
-            <ul>
-              <li><i class="bx bx-chevron-right"></i> <a href="#">Web Design</a></li>
-              <li><i class="bx bx-chevron-right"></i> <a href="#">Web Development</a></li>
-              <li><i class="bx bx-chevron-right"></i> <a href="#">Product Management</a></li>
-              <li><i class="bx bx-chevron-right"></i> <a href="#">Marketing</a></li>
-              <li><i class="bx bx-chevron-right"></i> <a href="#">Graphic Design</a></li>
-            </ul>
-          </div>
+              <div class="bento-dark-grid">
+                <div class="bento-metric-tile">
+                  <div class="bento-tile-label">Nilai Estimasi Aset</div>
+                  <div class="bento-tile-value" style="color: var(--c-mint);">
+                    Rp <?= number_format($total_nilai_aset, 0, ',', '.') ?>
+                  </div>
+                </div>
 
-          <div class="col-lg-4 col-md-6 footer-newsletter">
-            <h4>Our Newsletter</h4>
-            <p>Tamen quem nulla quae legam multos aute sint culpa legam noster magna</p>
-            <form action="" method="post">
-              <input type="email" name="email"><input type="submit" value="Subscribe">
-            </form>
+                <div class="bento-metric-tile">
+                  <div class="bento-tile-label">Protokol Keamanan</div>
+                  <div class="bento-tile-value" style="color: var(--c-lime);">
+                    SSL Require
+                  </div>
+                </div>
+
+                <div class="bento-metric-tile">
+                  <div class="bento-tile-label">Mekanisme Pooler</div>
+                  <div class="bento-tile-value" style="color: #ffffff;">
+                    Port 5432 / AWS
+                  </div>
+                </div>
+
+                <div class="bento-metric-tile">
+                  <div class="bento-tile-label">Platform Hosting</div>
+                  <div class="bento-tile-value" style="color: var(--c-mint);">
+                    Vercel Edge
+                  </div>
+                </div>
+              </div>
+
+              <div style="background: var(--c-forest-700); border: 1px solid var(--border-glass); border-radius: var(--radius-bento-sm); padding: 16px; margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <span style="font-size: 0.8rem; font-weight: 700; color: #ffffff;">Status Sinkronisasi Sistem</span>
+                  <span style="font-size: 0.75rem; color: var(--c-lime); font-weight: 700;">100% Siap Operasional</span>
+                </div>
+                <div class="bento-progress-track" style="margin-top: 0;">
+                  <div class="bento-progress-fill" style="width: 100%;"></div>
+                </div>
+                <div style="font-size: 0.75rem; color: var(--c-sage); margin-top: 8px;">
+                  Semua tabel (Master Barang, Pembelian, Penjualan, Supplier, Customer) telah terintegrasi di PostgreSQL Supabase.
+                </div>
+              </div>
+
+              <a href="login.php" class="bento-btn bento-btn-lime" style="width: 100%; justify-content: center;">
+                <span>Masuk Dashboard Admin</span>
+                <i class="fas fa-arrow-right"></i>
+              </a>
+            </div>
 
           </div>
 
         </div>
       </div>
+
+    </div>
+  </section>
+
+  <!-- ========================================================
+       CORE FEATURES BENTO GRID SECTION
+       ======================================================== -->
+  <section class="landing-section landing-section-alt" id="features">
+    <div style="max-width: 1280px; margin: 0 auto;">
+      
+      <div class="landing-section-header">
+        <span class="landing-section-tag">Fitur Tingkat Tinggi</span>
+        <h2 class="landing-section-title">Arsitektur Cerdas untuk Manajemen Tanpa Hambatan</h2>
+        <p class="landing-section-desc">
+          Setiap modul dirancang untuk akurasi data stok mutlak, menghilangkan risiko selisih inventaris fisik dan mempercepat rantai pasok Anda.
+        </p>
+      </div>
+
+      <div class="features-bento-grid">
+        
+        <!-- Feature 1 (Span 2) -->
+        <div class="feature-bento-card card-span-2">
+          <div>
+            <div class="feature-icon-box">
+              <i class="fas fa-boxes-stacked"></i>
+            </div>
+            <h3 class="feature-card-title">Pencatatan Stok Masuk &amp; Keluar Real-Time</h3>
+            <p class="feature-card-desc">
+              Setiap transaksi pembelian dari supplier langsung mengkredit jumlah barang di master data, sedangkan permintaan barang keluar otomatis mendebit stok dengan pencatatan log audit transparan tanpa jeda.
+            </p>
+          </div>
+          <div style="margin-top: 24px; display: flex; gap: 10px; flex-wrap: wrap;">
+            <span style="font-size: 0.75rem; padding: 4px 12px; border-radius: var(--radius-pill); background: var(--c-forest-700); color: var(--c-mint); border: 1px solid var(--border-glass);">
+              <i class="fas fa-check" style="color: var(--c-lime); margin-right: 4px;"></i> Otomatisasi Stok
+            </span>
+            <span style="font-size: 0.75rem; padding: 4px 12px; border-radius: var(--radius-pill); background: var(--c-forest-700); color: var(--c-mint); border: 1px solid var(--border-glass);">
+              <i class="fas fa-check" style="color: var(--c-lime); margin-right: 4px;"></i> Log Transaksi Akurat
+            </span>
+            <span style="font-size: 0.75rem; padding: 4px 12px; border-radius: var(--radius-pill); background: var(--c-forest-700); color: var(--c-mint); border: 1px solid var(--border-glass);">
+              <i class="fas fa-check" style="color: var(--c-lime); margin-right: 4px;"></i> Riwayat Detail
+            </span>
+          </div>
+        </div>
+
+        <!-- Feature 2 -->
+        <div class="feature-bento-card">
+          <div>
+            <div class="feature-icon-box">
+              <i class="fas fa-database"></i>
+            </div>
+            <h3 class="feature-card-title">Supabase Cloud Database</h3>
+            <p class="feature-card-desc">
+              Didukung oleh mesin PostgreSQL tingkat enterprise dengan koneksi SSL aman, ACID compliance, dan skalabilitas tak terbatas di cloud.
+            </p>
+          </div>
+          <div style="margin-top: 20px;">
+            <span style="font-size: 0.75rem; color: var(--c-lime); font-weight: 700;">AWS Ap-Northeast Pooler &rarr;</span>
+          </div>
+        </div>
+
+        <!-- Feature 3 -->
+        <div class="feature-bento-card">
+          <div>
+            <div class="feature-icon-box">
+              <i class="fas fa-bell"></i>
+            </div>
+            <h3 class="feature-card-title">Peringatan Stok Minimum</h3>
+            <p class="feature-card-desc">
+              Indikator visual pintar memberi sinyal dini saat barang mendekati batas restock kritis, mencegah keterlambatan suplai ke operasional.
+            </p>
+          </div>
+          <div style="margin-top: 20px;">
+            <span class="bento-status-pill bento-status-low" style="font-size: 0.725rem;">Peringatan Otomatis Aktif</span>
+          </div>
+        </div>
+
+        <!-- Feature 4 -->
+        <div class="feature-bento-card">
+          <div>
+            <div class="feature-icon-box">
+              <i class="fas fa-user-shield"></i>
+            </div>
+            <h3 class="feature-card-title">Multi-Role RBAC Security</h3>
+            <p class="feature-card-desc">
+              Pemisahan hak akses granular antara Administrator Gudang dan Akun Supplier untuk menjaga kerahasiaan harga beli dan kontrol data.
+            </p>
+          </div>
+          <div style="margin-top: 20px;">
+            <span style="font-size: 0.75rem; color: var(--c-mint); font-weight: 600;">Admin &bull; Petugas &bull; Supplier</span>
+          </div>
+        </div>
+
+        <!-- Feature 5 (Span 2) -->
+        <div class="feature-bento-card card-span-2">
+          <div>
+            <div class="feature-icon-box">
+              <i class="fas fa-cloud-arrow-up"></i>
+            </div>
+            <h3 class="feature-card-title">Vercel Serverless Ready</h3>
+            <p class="feature-card-desc">
+              Arsitektur aplikasi terkonfigurasi dengan standar router serverless Vercel (`vercel-php@0.9.0`), driver native `pgsql`, dan environment variables aman untuk deployment kilat tanpa server fisik.
+            </p>
+          </div>
+          <div style="margin-top: 24px; display: flex; gap: 10px; flex-wrap: wrap;">
+            <span style="font-size: 0.75rem; padding: 4px 12px; border-radius: var(--radius-pill); background: var(--c-forest-700); color: var(--c-mint); border: 1px solid var(--border-glass);">
+              <i class="fas fa-bolt" style="color: var(--c-lime); margin-right: 4px;"></i> Zero Server Maintenance
+            </span>
+            <span style="font-size: 0.75rem; padding: 4px 12px; border-radius: var(--radius-pill); background: var(--c-forest-700); color: var(--c-mint); border: 1px solid var(--border-glass);">
+              <i class="fas fa-mobile-screen" style="color: var(--c-lime); margin-right: 4px;"></i> Responsif Desktop &amp; Mobile
+            </span>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ========================================================
+       LIVE DATABASE CATALOG PREVIEW SECTION
+       ======================================================== -->
+  <section class="landing-section" id="katalog">
+    <div style="max-width: 1280px; margin: 0 auto;">
+      
+      <div class="landing-section-header">
+        <span class="landing-section-tag">Katalog Terhubung</span>
+        <h2 class="landing-section-title">Data Master Barang Live dari Supabase</h2>
+        <p class="landing-section-desc">
+          Tabel di bawah ini ditarik langsung dari tabel `tb_barang` di basis data PostgreSQL Supabase.
+        </p>
+      </div>
+
+      <div class="bento-table-card">
+        <div class="bento-table-header">
+          <div>
+            <h3 style="color: #ffffff; font-size: 1.15rem; font-weight: 800; margin: 0;">Master Inventory Preview</h3>
+            <p style="color: var(--c-sage); font-size: 0.8rem; margin: 4px 0 0 0;">Menampilkan status inventaris aktif dan unit harga</p>
+          </div>
+          <a href="login.php" class="bento-btn bento-btn-lime" style="font-size: 0.8rem; padding: 8px 18px;">
+            <span>Kelola di Dashboard</span>
+            <i class="fas fa-arrow-right"></i>
+          </a>
+        </div>
+
+        <div class="bento-table-wrap">
+          <table class="bento-table">
+            <thead>
+              <tr>
+                <th>Kode SKU</th>
+                <th>Nama Produk</th>
+                <th>Kategori</th>
+                <th>Jumlah Stok</th>
+                <th>Harga Jual</th>
+                <th>Status Ketersediaan</th>
+              </tr>
+            </thead>
+            <tbody>
+              <?php foreach ($recent_items as $item): ?>
+                <tr>
+                  <td style="font-family: var(--font-mono); font-weight: 700; color: var(--c-lime);">
+                    <?= htmlspecialchars($item['kd_barang']) ?>
+                  </td>
+                  <td style="font-weight: 700; color: #ffffff;">
+                    <?= htmlspecialchars($item['nama_barang']) ?>
+                  </td>
+                  <td>
+                    <span style="font-size: 0.8rem; padding: 3px 10px; border-radius: var(--radius-pill); background: var(--c-forest-700); color: var(--c-mint); border: 1px solid var(--border-glass);">
+                      <?= htmlspecialchars($item['kategori']) ?>
+                    </span>
+                  </td>
+                  <td style="font-weight: 800; font-family: var(--font-mono); font-size: 1rem;">
+                    <?= number_format((int)$item['stok']) ?> Unit
+                  </td>
+                  <td style="font-family: var(--font-mono); font-weight: 700; color: var(--c-mint);">
+                    Rp <?= number_format((float)$item['harga_jual'], 0, ',', '.') ?>
+                  </td>
+                  <td>
+                    <?php if ((int)$item['stok'] > 15): ?>
+                      <span class="bento-status-pill bento-status-safe">
+                        <i class="fas fa-check-circle"></i> Stok Aman
+                      </span>
+                    <?php elseif ((int)$item['stok'] > 0): ?>
+                      <span class="bento-status-pill bento-status-low">
+                        <i class="fas fa-triangle-exclamation"></i> Menipis
+                      </span>
+                    <?php else: ?>
+                      <span class="bento-status-pill" style="background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3);">
+                        <i class="fas fa-times-circle"></i> Habis
+                      </span>
+                    <?php endif; ?>
+                  </td>
+                </tr>
+              <?php endforeach; ?>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ========================================================
+       FAQ BENTO SECTION (Smooth Vanilla JS Accordion)
+       ======================================================== -->
+  <section class="landing-section landing-section-alt" id="faq">
+    <div style="max-width: 1280px; margin: 0 auto;">
+      
+      <div class="landing-section-header">
+        <span class="landing-section-tag">Pusat Informasi</span>
+        <h2 class="landing-section-title">Pertanyaan Seputar SIMTI Cloud</h2>
+        <p class="landing-section-desc">
+          Jawaban praktis mengenai implementasi database, keamanan, dan deployment serverless.
+        </p>
+      </div>
+
+      <div class="faq-bento-list">
+        
+        <div class="faq-bento-card open">
+          <button class="faq-question-btn" type="button">
+            <span>Apakah database sistem ini menggunakan Supabase PostgreSQL?</span>
+            <div class="faq-icon-arrow"><i class="fas fa-chevron-down"></i></div>
+          </button>
+          <div class="faq-answer-body">
+            Ya, benar. Seluruh data (barang, supplier, customer, pembelian, penjualan, user) telah termigrasi penuh ke basis data PostgreSQL di Supabase. Koneksi menggunakan driver native `pg_*` dengan SSL mode require yang aman dan berkinerja tinggi.
+          </div>
+        </div>
+
+        <div class="faq-bento-card">
+          <button class="faq-question-btn" type="button">
+            <span>Apakah proyek ini dapat diunggah langsung ke Vercel?</span>
+            <div class="faq-icon-arrow"><i class="fas fa-chevron-down"></i></div>
+          </button>
+          <div class="faq-answer-body">
+            Sangat kompatibel. Proyek telah dilengkapi dengan berkas `vercel.json` dan router `api/index.php` yang siap pakai menggunakan runtime `vercel-php@0.9.0`. Variabel lingkungan Supabase juga dapat diatur langsung di dashboard Vercel.
+          </div>
+        </div>
+
+        <div class="faq-bento-card">
+          <button class="faq-question-btn" type="button">
+            <span>Bagaimana alur pencatatan stok keluar dan stok masuk?</span>
+            <div class="faq-icon-arrow"><i class="fas fa-chevron-down"></i></div>
+          </button>
+          <div class="faq-answer-body">
+            Saat transaksi pembelian dicatat oleh supplier atau admin, stok barang di master data bertambah secara otomatis. Ketika barang dikeluarkan untuk kebutuhan operasional atau penjualan, stok berkurang dan riwayatnya tersimpan di tabel log aktivitas.
+          </div>
+        </div>
+
+        <div class="faq-bento-card">
+          <button class="faq-question-btn" type="button">
+            <span>Apakah tampilan sudah responsif untuk pengguna smartphone?</span>
+            <div class="faq-icon-arrow"><i class="fas fa-chevron-down"></i></div>
+          </button>
+          <div class="faq-answer-body">
+            Ya. Seluruh tata letak Bento UI mengadopsi prinsip fluid-responsive dengan CSS Grid dan Flexbox modern. Di layar perangkat ponsel, navigasi kapsul berubah menjadi menu sentuh dan grid metrics bertumpuk secara rapi tanpa pergeseran horizontal.
+          </div>
+        </div>
+
+        <div class="faq-bento-card">
+          <button class="faq-question-btn" type="button">
+            <span>Bagaimana cara mendapatkan akses masuk ke sistem?</span>
+            <div class="faq-icon-arrow"><i class="fas fa-chevron-down"></i></div>
+          </button>
+          <div class="faq-answer-body">
+            Anda dapat langsung menekan tombol "Masuk Portal" di navigasi atas atau tombol di bawah ini. Halaman login juga dilengkapi tombol demo 1-klik untuk akun Administrator dan Supplier agar mempermudah pengujian.
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ========================================================
+       BOTTOM CTA BENTO BANNER
+       ======================================================== -->
+  <section class="landing-section" style="padding-top: 40px; padding-bottom: 90px;">
+    <div style="max-width: 1280px; margin: 0 auto;">
+      
+      <div class="cta-banner-bento">
+        <span class="landing-section-tag" style="margin-bottom: 20px;">Mulai Sekarang</span>
+        <h2 style="font-size: clamp(2rem, 4vw, 3.2rem); font-weight: 800; color: #ffffff; letter-spacing: -0.03em; margin-bottom: 16px;">
+          Tingkatkan Efisiensi Gudang Anda Bersama SIMTI
+        </h2>
+        <p style="font-size: 1.1rem; color: var(--c-sage); max-width: 680px; margin: 0 auto 36px auto; line-height: 1.6;">
+          Dapatkan kemudahan pelacakan stok barang real-time, audit ledger otomatis, dan kecepatan cloud database PostgreSQL tanpa kerumitan instalasi.
+        </p>
+
+        <div style="display: flex; justify-content: center; align-items: center; gap: 16px; flex-wrap: wrap;">
+          <a href="login.php" class="hero-btn-primary">
+            <span>Buka Portal Sekarang</span>
+            <i class="fas fa-arrow-right"></i>
+          </a>
+          <a href="register.php" class="hero-btn-secondary">
+            <i class="fas fa-user-plus"></i>
+            <span>Daftar Akun Baru</span>
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ========================================================
+       EDITORIAL FOOTER (#051F20 Canvas)
+       ======================================================== -->
+  <footer class="landing-footer">
+    <div class="landing-footer-inner">
+      
+      <div>
+        <div class="landing-brand" style="margin-bottom: 18px;">
+          <div class="landing-brand-icon">
+            <i class="fas fa-boxes-stacked"></i>
+          </div>
+          <div class="landing-brand-text">
+            <span>SIMTI</span>
+            <span class="landing-brand-sub">Inventory Cloud</span>
+          </div>
+        </div>
+        <p style="font-size: 0.875rem; color: var(--c-sage); line-height: 1.65; max-width: 380px; margin-bottom: 20px;">
+          Sistem Informasi Manajemen Pergudangan modern berbasis cloud PostgreSQL Supabase dengan tampilan Bento UI yang bersih dan intuitif.
+        </p>
+        <div style="display: flex; gap: 10px;">
+          <a href="#" class="bento-icon-pill" title="Github"><i class="fab fa-github"></i></a>
+          <a href="#" class="bento-icon-pill" title="Documentation"><i class="fas fa-book"></i></a>
+          <a href="#" class="bento-icon-pill" title="Database"><i class="fas fa-database"></i></a>
+        </div>
+      </div>
+
+      <div>
+        <h4 class="footer-col-title">Navigasi Utama</h4>
+        <ul class="footer-link-list">
+          <li><a href="#hero">Beranda Utama</a></li>
+          <li><a href="#showcase">Live Bento Mockup</a></li>
+          <li><a href="#features">Fitur Unggulan</a></li>
+          <li><a href="#katalog">Katalog Supabase</a></li>
+          <li><a href="#faq">Pusat Bantuan / FAQ</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 class="footer-col-title">Modul Sistem</h4>
+        <ul class="footer-link-list">
+          <li><a href="login.php">Portal Administrator</a></li>
+          <li><a href="login.php">Portal Petugas Supplier</a></li>
+          <li><a href="register.php">Registrasi Akun</a></li>
+          <li><a href="login.php">Laporan &amp; Rekonsiliasi</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 class="footer-col-title">Spesifikasi Cloud</h4>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <div style="font-size: 0.8rem; color: var(--c-mint);">
+            <strong style="color: #ffffff;">Database:</strong> Supabase PostgreSQL
+          </div>
+          <div style="font-size: 0.8rem; color: var(--c-mint);">
+            <strong style="color: #ffffff;">Region:</strong> AWS AP-Northeast-1
+          </div>
+          <div style="font-size: 0.8rem; color: var(--c-mint);">
+            <strong style="color: #ffffff;">Hosting:</strong> Vercel Serverless
+          </div>
+          <div style="font-size: 0.8rem; color: var(--c-lime); font-weight: 700;">
+            <i class="fas fa-circle" style="font-size: 8px;"></i> Semua Layanan Beroperasi Normal
+          </div>
+        </div>
+      </div>
+
     </div>
 
-    <div class="container">
-      <div class="copyright">
-        &copy; Copyright <strong><span>Bootslander</span></strong>. All Rights Reserved
+    <div class="footer-bottom">
+      <div>
+        &copy; <?= date('Y') ?> <strong>SIMTI Inventory Gudang</strong>. Hak Cipta Dilindungi Undang-Undang.
       </div>
-      <div class="credits">
-        Designed by <a href="https://bootstrapmade.com/">BootstrapMade</a>
+      <div style="display: flex; gap: 20px;">
+        <span style="color: var(--c-sage);">Dirancang dengan Palet Forest Dark &amp; Pale Mint</span>
       </div>
     </div>
-  </footer><!-- End Footer -->
+  </footer>
 
-  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
-  <div id="preloader"></div>
+  <!-- ========================================================
+       VANILLA JAVASCRIPT: Accordion, Mobile Menu, Scroll Spy
+       ======================================================== -->
+  <script>
+    // 1. Mobile Menu Toggle
+    const mobileBtn = document.getElementById('mobileMenuBtn');
+    const navMenu = document.getElementById('landingNavMenu');
+    if (mobileBtn && navMenu) {
+      mobileBtn.addEventListener('click', () => {
+        navMenu.classList.toggle('mobile-open');
+        const icon = mobileBtn.querySelector('i');
+        if (icon) {
+          icon.classList.toggle('fa-bars');
+          icon.classList.toggle('fa-times');
+        }
+      });
+    }
 
-  <!-- Vendor JS Files -->
-  <script src="assets/Template/Bootslander/assets/vendor/purecounter/purecounter_vanilla.js"></script>
-  <script src="assets/Template/Bootslander/assets/vendor/aos/aos.js"></script>
-  <script src="assets/Template/Bootslander/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="assets/Template/Bootslander/assets/vendor/glightbox/js/glightbox.min.js"></script>
-  <script src="assets/Template/Bootslander/assets/vendor/swiper/swiper-bundle.min.js"></script>
-  <script src="assets/Template/Bootslander/assets/vendor/php-email-form/validate.js"></script>
+    // 2. FAQ Bento Accordion
+    document.querySelectorAll('.faq-bento-card').forEach(card => {
+      const btn = card.querySelector('.faq-question-btn');
+      if (btn) {
+        btn.addEventListener('click', () => {
+          const isOpen = card.classList.contains('open');
+          // Tutup kartu lain
+          document.querySelectorAll('.faq-bento-card').forEach(c => c.classList.remove('open'));
+          // Toggle kartu ini
+          if (!isOpen) {
+            card.classList.add('open');
+          }
+        });
+      }
+    });
 
-  <!-- Template Main JS File -->
-  <script src="assets/Template/Bootslander/assets/js/main.js"></script>
+    // 3. Highlight Nav Tabs on Scroll
+    const sections = document.querySelectorAll('section[id]');
+    const navLinks = document.querySelectorAll('.landing-nav-link');
+
+    window.addEventListener('scroll', () => {
+      let current = '';
+      const scrollY = window.pageYOffset;
+
+      sections.forEach(section => {
+        const sectionHeight = section.offsetHeight;
+        const sectionTop = section.offsetTop - 120;
+        const sectionId = section.getAttribute('id');
+
+        if (scrollY > sectionTop && scrollY <= sectionTop + sectionHeight) {
+          current = sectionId;
+        }
+      });
+
+      navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === `#${current}`) {
+          link.classList.add('active');
+        }
+      });
+      // Fallback jika di puncak halaman
+      if (scrollY < 100 && navLinks[0]) {
+        navLinks.forEach(l => l.classList.remove('active'));
+        navLinks[0].classList.add('active');
+      }
+    });
+  </script>
 
 </body>
-
 </html>
